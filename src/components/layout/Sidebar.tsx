@@ -14,6 +14,8 @@ import {
   Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import kanbanProLogo from '@/assets/kanban-pro-logo.png';
 
 interface SidebarItem {
   label: string;
@@ -38,6 +40,7 @@ const sidebarItems: SidebarItem[] = [
 export const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <>
@@ -68,11 +71,12 @@ export const Sidebar = () => {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
             {!isCollapsed && (
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                  <MessageSquare className="w-5 h-5 text-white" />
-                </div>
-                <span className="font-semibold text-sidebar-foreground">CRM WhatsApp</span>
+              <div className="flex items-center space-x-3">
+                <img 
+                  src={kanbanProLogo} 
+                  alt="KanbanPRO" 
+                  className="h-8 w-auto"
+                />
               </div>
             )}
             
@@ -142,12 +146,12 @@ export const Sidebar = () => {
               isCollapsed && "justify-center"
             )}>
               <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center text-white font-semibold">
-                A
+                {user?.email?.charAt(0).toUpperCase() || 'U'}
               </div>
               {!isCollapsed && (
                 <div>
-                  <p className="text-sm font-medium text-sidebar-foreground">Admin Usuario</p>
-                  <p className="text-xs text-sidebar-foreground/70">admin@empresa.com</p>
+                  <p className="text-sm font-medium text-sidebar-foreground">{user?.email}</p>
+                  <p className="text-xs text-sidebar-foreground/70">Usuario</p>
                 </div>
               )}
             </div>
