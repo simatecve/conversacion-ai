@@ -77,17 +77,29 @@ const WhatsAppConnections = () => {
       return;
     }
 
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "Usuario no autenticado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setCreating(true);
     try {
-      // Call edge function to create WhatsApp connection
-      const { data, error } = await supabase.functions.invoke('create-whatsapp-connection', {
-        body: {
+      // Direct insert to whatsapp_connections table
+      const { data, error } = await supabase
+        .from('whatsapp_connections')
+        .insert({
+          user_id: user.id,
           name: formData.name,
           phone_number: formData.phone_number,
           color: formData.color,
-          user_id: user?.id
-        }
-      });
+          status: 'desconectado'
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
