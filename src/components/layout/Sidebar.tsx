@@ -24,17 +24,47 @@ interface SidebarItem {
   badge?: number;
 }
 
-const sidebarItems: SidebarItem[] = [
-  { label: 'Panel Principal', icon: LayoutDashboard, href: '/dashboard' },
-  { label: 'Conversaciones', icon: MessageSquare, href: '/conversaciones', badge: 3 },
-  { label: 'Leads', icon: UserPlus, href: '/leads', badge: 12 },
-  { label: 'Contactos', icon: Users, href: '/contactos' },
-  { label: 'Envío Masivo', icon: Send, href: '/envio-masivo' },
-  { label: 'Conexiones WhatsApp', icon: Phone, href: '/conexiones' },
-  { label: 'Asistente IA', icon: Bot, href: '/asistente-ia' },
-  { label: 'Calendario', icon: Calendar, href: '/calendario' },
-  { label: 'Reportes', icon: BarChart3, href: '/reportes' },
-  { label: 'Configuración', icon: Settings, href: '/configuracion' },
+interface SidebarGroup {
+  label: string;
+  items: SidebarItem[];
+}
+
+const sidebarGroups: SidebarGroup[] = [
+  {
+    label: 'Principal',
+    items: [
+      { label: 'Panel Principal', icon: LayoutDashboard, href: '/' },
+    ]
+  },
+  {
+    label: 'Comunicaciones',
+    items: [
+      { label: 'Conexiones WhatsApp', icon: Phone, href: '/conexiones' },
+      { label: 'Conversaciones', icon: MessageSquare, href: '/conversaciones', badge: 3 },
+      { label: 'Campañas Masivas', icon: Send, href: '/campanas-masivas' },
+    ]
+  },
+  {
+    label: 'Gestión',
+    items: [
+      { label: 'Leads', icon: UserPlus, href: '/leads', badge: 12 },
+      { label: 'Contactos', icon: Users, href: '/contactos' },
+      { label: 'Asistente IA', icon: Bot, href: '/asistente-ia' },
+      { label: 'Calendario', icon: Calendar, href: '/calendario' },
+    ]
+  },
+  {
+    label: 'Análisis',
+    items: [
+      { label: 'Reportes', icon: BarChart3, href: '/reportes' },
+    ]
+  },
+  {
+    label: 'Sistema',
+    items: [
+      { label: 'Configuración', icon: Settings, href: '/configuracion' },
+    ]
+  }
 ];
 
 export const Sidebar = () => {
@@ -99,43 +129,54 @@ export const Sidebar = () => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            {sidebarItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center space-x-3 p-3 rounded-lg transition-all duration-200",
-                  "hover:bg-sidebar-accent hover:scale-105 group",
-                  item.href === '/dashboard' && "bg-sidebar-accent border border-sidebar-border shadow-sm"
-                )}
-              >
-                <item.icon className={cn(
-                  "h-5 w-5 transition-colors",
-                  item.href === '/dashboard' 
-                    ? "text-sidebar-primary" 
-                    : "text-sidebar-foreground group-hover:text-sidebar-primary"
-                )} />
-                
+          <nav className="flex-1 p-4 space-y-4 overflow-y-auto">
+            {sidebarGroups.map((group) => (
+              <div key={group.label} className="space-y-2">
                 {!isCollapsed && (
-                  <div className="flex items-center justify-between w-full">
-                    <span className={cn(
-                      "font-medium transition-colors",
-                      item.href === '/dashboard'
-                        ? "text-sidebar-primary"
-                        : "text-sidebar-foreground group-hover:text-sidebar-primary"
-                    )}>
-                      {item.label}
-                    </span>
-                    
-                    {item.badge && (
-                      <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
+                  <h3 className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider px-3">
+                    {group.label}
+                  </h3>
                 )}
-              </a>
+                <div className="space-y-1">
+                  {group.items.map((item) => (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center space-x-3 p-3 rounded-lg transition-all duration-200",
+                        "hover:bg-sidebar-accent hover:scale-105 group",
+                        item.href === '/' && "bg-sidebar-accent border border-sidebar-border shadow-sm"
+                      )}
+                    >
+                      <item.icon className={cn(
+                        "h-5 w-5 transition-colors",
+                        item.href === '/' 
+                          ? "text-sidebar-primary" 
+                          : "text-sidebar-foreground group-hover:text-sidebar-primary"
+                      )} />
+                      
+                      {!isCollapsed && (
+                        <div className="flex items-center justify-between w-full">
+                          <span className={cn(
+                            "font-medium transition-colors",
+                            item.href === '/'
+                              ? "text-sidebar-primary"
+                              : "text-sidebar-foreground group-hover:text-sidebar-primary"
+                          )}>
+                            {item.label}
+                          </span>
+                          
+                          {item.badge && (
+                            <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </a>
+                  ))}
+                </div>
+              </div>
             ))}
           </nav>
 
