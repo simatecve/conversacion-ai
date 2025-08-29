@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
-import kanbanProLogo from '@/assets/kanban-pro-logo.png';
+import logo2 from '@/assets/logo2.png';
 
 interface SidebarItem {
   label: string;
@@ -103,48 +103,42 @@ export const Sidebar = () => {
             {!isCollapsed && (
               <div className="flex items-center space-x-3">
                 <img 
-                  src={kanbanProLogo} 
+                  src={logo2} 
                   alt="KanbanPRO" 
                   className="h-8 w-auto"
                 />
               </div>
             )}
-            
-            <div className="flex items-center space-x-2">
-              {isMobileOpen && (
-                <button
-                  onClick={() => setIsMobileOpen(false)}
-                  className="md:hidden p-1 hover:bg-sidebar-accent rounded"
-                >
-                  <X className="h-4 w-4 text-sidebar-foreground" />
-                </button>
-              )}
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="hidden md:block p-1 hover:bg-sidebar-accent rounded transition-colors"
-              >
-                <Menu className="h-4 w-4 text-sidebar-foreground" />
-              </button>
-            </div>
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="hidden md:flex p-2 hover:bg-sidebar-accent rounded-lg transition-colors"
+            >
+              {isCollapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />}
+            </button>
+            <button
+              onClick={() => setIsMobileOpen(false)}
+              className="md:hidden p-2 hover:bg-sidebar-accent rounded-lg transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-4 overflow-y-auto">
-            {sidebarGroups.map((group) => (
-              <div key={group.label} className="space-y-2">
+          <nav className="flex-1 overflow-y-auto p-4">
+            {sidebarGroups.map((group, groupIndex) => (
+              <div key={groupIndex} className="mb-6">
                 {!isCollapsed && (
-                  <h3 className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider px-3">
+                  <h3 className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider mb-3 px-3">
                     {group.label}
                   </h3>
                 )}
                 <div className="space-y-1">
-                  {group.items.map((item) => (
+                  {group.items.map((item, itemIndex) => (
                     <a
-                      key={item.href}
+                      key={itemIndex}
                       href={item.href}
                       className={cn(
-                        "flex items-center space-x-3 p-3 rounded-lg transition-all duration-200",
-                        "hover:bg-sidebar-accent hover:scale-105 group",
+                        "group flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-sidebar-accent",
                         item.href === '/' && "bg-sidebar-accent border border-sidebar-border shadow-sm"
                       )}
                     >
@@ -186,13 +180,15 @@ export const Sidebar = () => {
               "flex items-center space-x-3 p-3 rounded-lg bg-sidebar-accent",
               isCollapsed && "justify-center"
             )}>
-              <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center text-white font-semibold">
-                {user?.email?.charAt(0).toUpperCase() || 'U'}
+              <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                {user?.email?.charAt(0).toUpperCase()}
               </div>
               {!isCollapsed && (
-                <div>
-                  <p className="text-sm font-medium text-sidebar-foreground">{user?.email}</p>
-                  <p className="text-xs text-sidebar-foreground/70">Usuario</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-sidebar-foreground truncate">
+                    {user?.email}
+                  </p>
+                  <p className="text-xs text-sidebar-foreground/60">Usuario</p>
                 </div>
               )}
             </div>

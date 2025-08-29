@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import kanbanProLogo from '@/assets/kanban-pro-logo.png';
+import logo2 from '@/assets/logo2.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -63,7 +63,7 @@ const Login = () => {
         <CardHeader className="text-center space-y-6">
           <div className="flex justify-center">
             <img 
-              src={kanbanProLogo} 
+              src={logo2} 
               alt="KanbanPRO" 
               className="h-16 w-auto"
             />

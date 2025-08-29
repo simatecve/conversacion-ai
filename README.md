@@ -1,73 +1,54 @@
-# Welcome to your Lovable project
+# KanbanPRO
 
-## Project info
+Aplicación de gestión de leads y conversaciones con integración de WhatsApp e IA.
 
-**URL**: https://lovable.dev/projects/ef937529-0077-4dfa-b7f0-6bb813b342fe
+## Características
 
-## How can I edit this code?
+- 🔐 Autenticación segura con Supabase
+- 📱 Conexiones WhatsApp
+- 💬 Gestión de conversaciones
+- 👥 Administración de leads y contactos
+- 🤖 Asistente de IA
+- 📊 Panel de control con métricas
+- 📱 Diseño responsive
 
-There are several ways of editing your application.
+## Tecnologías
 
-**Use Lovable**
+- **Frontend**: React + TypeScript + Vite
+- **UI**: Tailwind CSS + shadcn/ui
+- **Backend**: Supabase
+- **Autenticación**: Supabase Auth
+- **Base de datos**: PostgreSQL (Supabase)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/ef937529-0077-4dfa-b7f0-6bb813b342fe) and start prompting.
+## Instalación
 
-Changes made via Lovable will be committed automatically to this repo.
+1. Clona el repositorio:
+```bash
+git clone https://github.com/simatecve/conversacion-ai.git
+cd conversacion-ai
+```
 
-**Use your preferred IDE**
+2. Instala las dependencias:
+```bash
+npm install
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+3. Configura las variables de entorno:
+```bash
+cp .env.example .env
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+4. Inicia el servidor de desarrollo:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Cambios Recientes
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### v1.1.0 - Actualización de Logo
+- ✅ Actualizado el logo de la aplicación de `kanban-pro-logo.png` a `logo2.png`
+- ✅ Aplicado el nuevo logo en la pantalla de login
+- ✅ Aplicado el nuevo logo en el menú lateral (sidebar)
+- ✅ Mejorada la consistencia visual de la marca
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/ef937529-0077-4dfa-b7f0-6bb813b342fe) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Estructura del Proyecto
