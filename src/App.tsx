@@ -8,6 +8,9 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import WhatsAppConnections from "./pages/WhatsAppConnections";
+import AIAgents from "./pages/AIAgents";
+import CreateAIAgent from "./pages/CreateAIAgent";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +32,21 @@ const App = () => (
             <Route path="/conexiones" element={
               <ProtectedRoute>
                 <WhatsAppConnections />
+              </ProtectedRoute>
+            } />
+            <Route path="/asistente-ia" element={
+              <ProtectedRoute>
+                <AIAgents />
+              </ProtectedRoute>
+            } />
+            <Route path="/crear-agente" element={
+              <ProtectedRoute>
+                <CreateAIAgent />
+              </ProtectedRoute>
+            } />
+            <Route path="/configuracion" element={
+              <ProtectedRoute>
+                <Settings />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
