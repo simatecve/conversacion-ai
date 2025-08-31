@@ -9,6 +9,7 @@ Aplicación de gestión de leads y conversaciones con integración de WhatsApp e
 - 💬 Gestión de conversaciones
 - 👥 Administración de leads y contactos
 - 🤖 Asistente de IA
+- 🔗 Gestión de integraciones de APIs de IA
 - 📊 Panel de control con métricas
 - 📱 Diseño responsive
 
@@ -43,7 +44,41 @@ cp .env.example .env
 npm run dev
 ```
 
+## Sistema de Integraciones de IA
+
+La aplicación incluye un sistema completo de gestión de integraciones con APIs de IA que permite:
+
+### Funcionalidades
+- **Gestión de claves API**: Almacenamiento seguro de claves para diferentes proveedores
+- **Proveedores soportados**: OpenAI, Groq, Gemini, Claude
+- **Activación/Desactivación**: Control granular de cada integración
+- **Seguridad**: Las claves se almacenan de forma segura y se muestran enmascaradas
+- **Validación**: Formularios con validación en tiempo real
+
+### Acceso
+1. Ve a **Configuración** en el menú lateral
+2. Selecciona la pestaña **"Integraciones"**
+3. Agrega, edita o elimina tus integraciones de IA
+
+### Uso
+- Haz clic en **"Agregar Integración"** para configurar una nueva API
+- Selecciona el proveedor (OpenAI, Groq, Gemini, Claude)
+- Ingresa tu clave API
+- Activa/desactiva según necesites
+- Usa los botones de edición para modificar integraciones existentes
+
 ## Cambios Recientes
+
+### v1.4.0 - Sistema de Integraciones de IA
+- ✅ **Nueva funcionalidad**: Sistema completo de gestión de integraciones de APIs de IA
+- ✅ **Interfaz con pestañas**: Reorganizada la página de configuración con pestañas para "Perfil" e "Integraciones"
+- ✅ **CRUD completo**: Crear, leer, actualizar y eliminar integraciones de API
+- ✅ **Proveedores soportados**: OpenAI, Groq, Gemini y Claude
+- ✅ **Seguridad**: Claves API enmascaradas con opción de mostrar/ocultar
+- ✅ **Estado de activación**: Switch para activar/desactivar integraciones
+- ✅ **Validación**: Formularios con validación y manejo de errores
+- ✅ **UI moderna**: Interfaz limpia usando shadcn/ui components
+- ✅ **Feedback visual**: Toasts para confirmaciones y notificaciones
 
 ### v1.3.0 - Mejoras en Agentes de IA y Navegación
 - ✅ **Corrección crítica**: Solucionado error de `SelectItem` con valores vacíos que causaba fallos en la aplicación

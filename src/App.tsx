@@ -10,6 +10,10 @@ import Login from "./pages/Login";
 import WhatsAppConnections from "./pages/WhatsAppConnections";
 import AIAgents from "./pages/AIAgents";
 import CreateAIAgent from "./pages/CreateAIAgent";
+import ContactLists from "./pages/ContactLists";
+import Contacts from "./pages/Contacts";
+import Campaigns from "./pages/Campaigns";
+import CreateCampaign from "./pages/CreateCampaign";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -42,6 +46,26 @@ const App = () => (
             <Route path="/crear-agente" element={
               <ProtectedRoute>
                 <CreateAIAgent />
+              </ProtectedRoute>
+            } />
+            <Route path="/listas-contactos" element={
+              <ProtectedRoute>
+                <ContactLists />
+              </ProtectedRoute>
+            } />
+            <Route path="/contactos/:listId" element={
+              <ProtectedRoute>
+                <Contacts />
+              </ProtectedRoute>
+            } />
+            <Route path="/campanas-masivas" element={
+              <ProtectedRoute>
+                <Campaigns />
+              </ProtectedRoute>
+            } />
+            <Route path="/crear-campana" element={
+              <ProtectedRoute>
+                <CreateCampaign />
               </ProtectedRoute>
             } />
             <Route path="/configuracion" element={

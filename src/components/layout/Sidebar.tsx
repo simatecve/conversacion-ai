@@ -48,7 +48,7 @@ const sidebarGroups: SidebarGroup[] = [
     label: 'Gestión',
     items: [
       { label: 'Leads', icon: UserPlus, href: '/leads', badge: 12 },
-      { label: 'Contactos', icon: Users, href: '/contactos' },
+      { label: 'Listas de Contactos', icon: Users, href: '/listas-contactos' },
       { label: 'Asistente IA', icon: Bot, href: '/asistente-ia' },
       { label: 'Calendario', icon: Calendar, href: '/calendario' },
     ]

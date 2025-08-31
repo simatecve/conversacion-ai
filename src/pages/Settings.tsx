@@ -4,11 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import AppLayout from '@/components/layout/AppLayout';
-import { User, Lock, Phone, Building, Mail, Save, Eye, EyeOff } from 'lucide-react';
+import Integrations from '@/components/Integrations';
+import { User, Lock, Phone, Building, Mail, Save, Eye, EyeOff, Settings as SettingsIcon, Key } from 'lucide-react';
 
 interface UserProfile {
   first_name: string | null;
@@ -59,12 +61,7 @@ const Settings = () => {
       }
 
       if (data) {
-        setProfile({
-          first_name: data.first_name || '',
-          last_name: data.last_name || '',
-          phone: data.phone || '',
-          company_name: data.company_name || ''
-        });
+        setProfile(data);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -80,19 +77,15 @@ const Settings = () => {
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.id) return;
+
     setSaving(true);
-
     try {
-      if (!user?.id) throw new Error('Usuario no autenticado');
-
       const { error } = await supabase
         .from('profiles')
         .upsert({
           id: user.id,
-          first_name: profile.first_name || null,
-          last_name: profile.last_name || null,
-          phone: profile.phone || null,
-          company_name: profile.company_name || null,
+          ...profile,
           updated_at: new Date().toISOString()
         });
 
@@ -120,7 +113,7 @@ const Settings = () => {
     if (passwords.new !== passwords.confirm) {
       toast({
         title: "Error",
-        description: "Las contraseñas nuevas no coinciden",
+        description: "Las contraseñas no coinciden",
         variant: "destructive",
       });
       return;
@@ -136,7 +129,6 @@ const Settings = () => {
     }
 
     setChangingPassword(true);
-
     try {
       const { error } = await supabase.auth.updateUser({
         password: passwords.new
@@ -144,11 +136,12 @@ const Settings = () => {
 
       if (error) throw error;
 
-      setPasswords({ current: '', new: '', confirm: '' });
       toast({
         title: "Éxito",
-        description: "Contraseña actualizada correctamente",
+        description: "Contraseña cambiada correctamente",
       });
+
+      setPasswords({ current: '', new: '', confirm: '' });
     } catch (error) {
       console.error('Error changing password:', error);
       toast({
@@ -185,201 +178,220 @@ const Settings = () => {
     <AppLayout>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center space-x-2">
-          <User className="h-6 w-6 text-primary" />
-          <h1 className="text-3xl font-bold">Configuración de Perfil</h1>
+          <SettingsIcon className="h-6 w-6 text-primary" />
+          <h1 className="text-3xl font-bold">Configuración</h1>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Información Personal */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <User className="h-5 w-5" />
-                <span>Información Personal</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleProfileUpdate} className="space-y-4">
-                {/* Email (Solo lectura) */}
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="flex items-center space-x-2">
-                    <Mail className="h-4 w-4" />
-                    <span>Correo Electrónico</span>
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={user?.email || ''}
-                    disabled
-                    className="bg-muted cursor-not-allowed"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    El correo electrónico no se puede modificar
-                  </p>
-                </div>
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="profile" className="flex items-center space-x-2">
+              <User className="h-4 w-4" />
+              <span>Perfil</span>
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="flex items-center space-x-2">
+              <Key className="h-4 w-4" />
+              <span>Integraciones</span>
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="profile" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Información Personal */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <User className="h-5 w-5" />
+                    <span>Información Personal</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleProfileUpdate} className="space-y-4">
+                    {/* Email (Solo lectura) */}
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="flex items-center space-x-2">
+                        <Mail className="h-4 w-4" />
+                        <span>Correo Electrónico</span>
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={user?.email || ''}
+                        disabled
+                        className="bg-muted cursor-not-allowed"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        El correo electrónico no se puede modificar
+                      </p>
+                    </div>
 
-                {/* Nombre */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="first_name">Nombre</Label>
-                    <Input
-                      id="first_name"
-                      type="text"
-                      value={profile.first_name || ''}
-                      onChange={(e) => setProfile(prev => ({ ...prev, first_name: e.target.value }))}
-                      placeholder="Tu nombre"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="last_name">Apellido</Label>
-                    <Input
-                      id="last_name"
-                      type="text"
-                      value={profile.last_name || ''}
-                      onChange={(e) => setProfile(prev => ({ ...prev, last_name: e.target.value }))}
-                      placeholder="Tu apellido"
-                    />
-                  </div>
-                </div>
+                    {/* Nombre */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="first_name">Nombre</Label>
+                        <Input
+                          id="first_name"
+                          type="text"
+                          value={profile.first_name || ''}
+                          onChange={(e) => setProfile(prev => ({ ...prev, first_name: e.target.value }))}
+                          placeholder="Tu nombre"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="last_name">Apellido</Label>
+                        <Input
+                          id="last_name"
+                          type="text"
+                          value={profile.last_name || ''}
+                          onChange={(e) => setProfile(prev => ({ ...prev, last_name: e.target.value }))}
+                          placeholder="Tu apellido"
+                        />
+                      </div>
+                    </div>
 
-                {/* Teléfono */}
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="flex items-center space-x-2">
-                    <Phone className="h-4 w-4" />
-                    <span>Teléfono</span>
-                  </Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={profile.phone || ''}
-                    onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="+54 9 11 1234-5678"
-                  />
-                </div>
+                    {/* Teléfono */}
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="flex items-center space-x-2">
+                        <Phone className="h-4 w-4" />
+                        <span>Teléfono</span>
+                      </Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={profile.phone || ''}
+                        onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+                        placeholder="+54 9 11 1234-5678"
+                      />
+                    </div>
 
-                {/* Empresa */}
-                <div className="space-y-2">
-                  <Label htmlFor="company_name" className="flex items-center space-x-2">
-                    <Building className="h-4 w-4" />
-                    <span>Empresa</span>
-                  </Label>
-                  <Input
-                    id="company_name"
-                    type="text"
-                    value={profile.company_name || ''}
-                    onChange={(e) => setProfile(prev => ({ ...prev, company_name: e.target.value }))}
-                    placeholder="Nombre de tu empresa"
-                  />
-                </div>
+                    {/* Empresa */}
+                    <div className="space-y-2">
+                      <Label htmlFor="company_name" className="flex items-center space-x-2">
+                        <Building className="h-4 w-4" />
+                        <span>Empresa</span>
+                      </Label>
+                      <Input
+                        id="company_name"
+                        type="text"
+                        value={profile.company_name || ''}
+                        onChange={(e) => setProfile(prev => ({ ...prev, company_name: e.target.value }))}
+                        placeholder="Nombre de tu empresa"
+                      />
+                    </div>
 
-                <Button type="submit" disabled={saving} className="w-full">
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? 'Guardando...' : 'Guardar Cambios'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* Cambio de Contraseña */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Lock className="h-5 w-5" />
-                <span>Cambiar Contraseña</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handlePasswordChange} className="space-y-4">
-                {/* Contraseña Nueva */}
-                <div className="space-y-2">
-                  <Label htmlFor="new_password">Nueva Contraseña</Label>
-                  <div className="relative">
-                    <Input
-                      id="new_password"
-                      type={showPasswords.new ? "text" : "password"}
-                      value={passwords.new}
-                      onChange={(e) => setPasswords(prev => ({ ...prev, new: e.target.value }))}
-                      placeholder="Mínimo 6 caracteres"
-                      className="pr-10"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => togglePasswordVisibility('new')}
-                    >
-                      {showPasswords.new ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
+                    <Button type="submit" disabled={saving} className="w-full">
+                      <Save className="h-4 w-4 mr-2" />
+                      {saving ? 'Guardando...' : 'Guardar Cambios'}
                     </Button>
-                  </div>
-                </div>
+                  </form>
+                </CardContent>
+              </Card>
 
-                {/* Confirmar Contraseña */}
-                <div className="space-y-2">
-                  <Label htmlFor="confirm_password">Confirmar Nueva Contraseña</Label>
-                  <div className="relative">
-                    <Input
-                      id="confirm_password"
-                      type={showPasswords.confirm ? "text" : "password"}
-                      value={passwords.confirm}
-                      onChange={(e) => setPasswords(prev => ({ ...prev, confirm: e.target.value }))}
-                      placeholder="Repite la nueva contraseña"
-                      className="pr-10"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => togglePasswordVisibility('confirm')}
+              {/* Cambio de Contraseña */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Lock className="h-5 w-5" />
+                    <span>Cambiar Contraseña</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handlePasswordChange} className="space-y-4">
+                    {/* Contraseña Nueva */}
+                    <div className="space-y-2">
+                      <Label htmlFor="new_password">Nueva Contraseña</Label>
+                      <div className="relative">
+                        <Input
+                          id="new_password"
+                          type={showPasswords.new ? "text" : "password"}
+                          value={passwords.new}
+                          onChange={(e) => setPasswords(prev => ({ ...prev, new: e.target.value }))}
+                          placeholder="Mínimo 6 caracteres"
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => togglePasswordVisibility('new')}
+                        >
+                          {showPasswords.new ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Confirmar Contraseña */}
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm_password">Confirmar Nueva Contraseña</Label>
+                      <div className="relative">
+                        <Input
+                          id="confirm_password"
+                          type={showPasswords.confirm ? "text" : "password"}
+                          value={passwords.confirm}
+                          onChange={(e) => setPasswords(prev => ({ ...prev, confirm: e.target.value }))}
+                          placeholder="Repite la nueva contraseña"
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => togglePasswordVisibility('confirm')}
+                        >
+                          {showPasswords.confirm ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <Button 
+                      type="submit" 
+                      disabled={changingPassword || !passwords.new || !passwords.confirm}
+                      className="w-full"
+                      variant="outline"
                     >
-                      {showPasswords.confirm ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
+                      <Lock className="h-4 w-4 mr-2" />
+                      {changingPassword ? 'Cambiando...' : 'Cambiar Contraseña'}
                     </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Información adicional */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Información de la Cuenta</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="font-medium text-muted-foreground">Tipo de Cuenta</p>
+                      <p className="capitalize">Cliente</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-muted-foreground">Fecha de Registro</p>
+                      <p>{user?.created_at ? new Date(user.created_at).toLocaleDateString('es-ES') : 'No disponible'}</p>
+                    </div>
                   </div>
-                </div>
-
-                <Separator />
-
-                <Button 
-                  type="submit" 
-                  disabled={changingPassword || !passwords.new || !passwords.confirm}
-                  className="w-full"
-                  variant="outline"
-                >
-                  <Lock className="h-4 w-4 mr-2" />
-                  {changingPassword ? 'Cambiando...' : 'Cambiar Contraseña'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Información adicional */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Información de la Cuenta</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="font-medium text-muted-foreground">Tipo de Cuenta</p>
-                <p className="capitalize">Cliente</p>
-              </div>
-              <div>
-                <p className="font-medium text-muted-foreground">Fecha de Registro</p>
-                <p>{user?.created_at ? new Date(user.created_at).toLocaleDateString('es-ES') : 'No disponible'}</p>
-              </div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+          </TabsContent>
+          
+          <TabsContent value="integrations" className="mt-6">
+            <Integrations />
+          </TabsContent>
+        </Tabs>
       </div>
     </AppLayout>
   );
