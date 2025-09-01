@@ -123,7 +123,7 @@ const Leads = () => {
     // Construir la consulta OR para filtrar por user_id o instancias del usuario
     let orConditions = [`user_id.eq.${user?.id}`];
     instanceNames.forEach(instanceName => {
-      orConditions.push(`instancia.eq."${instanceName}"`);
+      orConditions.push(`instancia.eq.${instanceName}`);
     });
 
     const { data, error } = await supabase
@@ -139,6 +139,8 @@ const Leads = () => {
       console.error('Error loading leads:', error);
       return;
     }
+
+
 
     setLeads(data || []);
   };
