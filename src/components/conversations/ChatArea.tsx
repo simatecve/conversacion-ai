@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Database } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';
+import { AssignToKanban } from './AssignToKanban';
 
 type Conversation = Database['public']['Tables']['conversations']['Row'];
 type Message = Database['public']['Tables']['messages']['Row'];
@@ -122,6 +123,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
           </div>
           
           <div className="flex items-center gap-2">
+            <AssignToKanban 
+              conversationPhone={conversation.whatsapp_number}
+              conversationName={conversation.pushname}
+              onLeadAssigned={(lead) => {
+                console.log('Lead asignado:', lead);
+              }}
+            />
             <Button variant="ghost" size="sm">
               <Phone className="h-4 w-4" />
             </Button>
