@@ -102,13 +102,14 @@ export const useSearchConversations = (searchTerm: string) => {
  */
 export const useMessages = (conversationId: string | null) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   // Query para obtener mensajes
   const messagesQuery = useQuery({
     queryKey: ['messages', conversationId],
-    queryFn: () => ConversationService.getMessages(conversationId || ''),
-    enabled: !!conversationId,
+    queryFn: () => ConversationService.getMessages(conversationId || '', user?.id || ''),
+    enabled: !!conversationId && !!user?.id,
     staleTime: 10000,
   });
 

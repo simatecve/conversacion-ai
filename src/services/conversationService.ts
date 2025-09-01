@@ -16,6 +16,26 @@ export class ConversationService {
    */
   static async getConversations(userId: string): Promise<ConversationWithLastMessage[]> {
     try {
+      // Primero obtenemos las instancias de WhatsApp del usuario
+      const { data: userInstances, error: instancesError } = await supabase
+        .from('whatsapp_connections')
+        .select('name')
+        .eq('user_id', userId);
+
+      if (instancesError) {
+        console.error('Error fetching user instances:', instancesError);
+        throw instancesError;
+      }
+      
+      // Si el usuario no tiene instancias, retornamos array vacío
+      if (!userInstances || userInstances.length === 0) {
+        return [];
+      }
+
+      // Extraemos los nombres de las instancias
+      const instanceNames = userInstances.map(instance => instance.name);
+
+      // Filtramos conversaciones por las instancias del usuario
       const { data, error } = await supabase
         .from('conversations')
         .select(`
@@ -29,7 +49,7 @@ export class ConversationService {
             is_bot
           )
         `)
-        .eq('user_id', userId)
+        .in('instance_name', instanceNames)
         .order('last_message_at', { ascending: false });
 
       if (error) {
@@ -72,6 +92,26 @@ export class ConversationService {
    */
   static async searchConversations(userId: string, searchTerm: string): Promise<ConversationWithLastMessage[]> {
     try {
+      // Primero obtenemos las instancias de WhatsApp del usuario
+      const { data: userInstances, error: instancesError } = await supabase
+        .from('whatsapp_connections')
+        .select('name')
+        .eq('user_id', userId);
+
+      if (instancesError) {
+        console.error('Error fetching user instances:', instancesError);
+        throw instancesError;
+      }
+      
+      // Si el usuario no tiene instancias, retornamos array vacío
+      if (!userInstances || userInstances.length === 0) {
+        return [];
+      }
+
+      // Extraemos los nombres de las instancias
+      const instanceNames = userInstances.map(instance => instance.name);
+
+      // Filtramos conversaciones por las instancias del usuario y la búsqueda
       const { data, error } = await supabase
         .from('conversations')
         .select(`
@@ -85,7 +125,7 @@ export class ConversationService {
             is_bot
           )
         `)
-        .eq('user_id', userId)
+        .in('instance_name', instanceNames)
         .or(`pushname.ilike.%${searchTerm}%,whatsapp_number.ilike.%${searchTerm}%`)
         .order('last_message_at', { ascending: false });
 
@@ -104,12 +144,33 @@ export class ConversationService {
   /**
    * Obtiene los mensajes de una conversación específica
    */
-  static async getMessages(conversationId: string, limit: number = 50, offset: number = 0): Promise<Message[]> {
+  static async getMessages(conversationId: string, userId: string, limit: number = 50, offset: number = 0): Promise<Message[]> {
     try {
+      // Primero obtenemos las instancias de WhatsApp del usuario
+      const { data: userInstances, error: instancesError } = await supabase
+        .from('whatsapp_connections')
+        .select('name')
+        .eq('user_id', userId);
+
+      if (instancesError) {
+        console.error('Error fetching user instances:', instancesError);
+        throw instancesError;
+      }
+      
+      // Si el usuario no tiene instancias, retornamos array vacío
+      if (!userInstances || userInstances.length === 0) {
+        return [];
+      }
+
+      // Extraemos los nombres de las instancias
+      const instanceNames = userInstances.map(instance => instance.name);
+
+      // Filtramos mensajes por conversación y las instancias del usuario
       const { data, error } = await supabase
         .from('messages')
         .select('*')
         .eq('conversation_id', conversationId)
+        .in('instance_name', instanceNames)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
