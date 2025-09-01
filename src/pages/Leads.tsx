@@ -107,13 +107,32 @@ const Leads = () => {
   };
 
   const loadLeads = async () => {
+    // Primero obtenemos las instancias del usuario logueado
+    const { data: userInstances, error: instancesError } = await supabase
+      .from('whatsapp_connections')
+      .select('name')
+      .eq('user_id', user?.id);
+
+    if (instancesError) {
+      console.error('Error loading user instances:', instancesError);
+      return;
+    }
+
+    const instanceNames = userInstances?.map(instance => instance.name) || [];
+
+    // Construir la consulta OR para filtrar por user_id o instancias del usuario
+    let orConditions = [`user_id.eq.${user?.id}`];
+    instanceNames.forEach(instanceName => {
+      orConditions.push(`instancia.eq.${instanceName}`);
+    });
+
     const { data, error } = await supabase
       .from('leads')
       .select(`
         *,
         lead_columns(*)
       `)
-      .or(`user_id.eq.${user?.id},instancia.eq.${user?.id}`)
+      .or(orConditions.join(','))
       .order('position');
 
     if (error) {
