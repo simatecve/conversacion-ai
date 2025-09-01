@@ -8,6 +8,7 @@ Aplicación de gestión de leads y conversaciones con integración de WhatsApp e
 - 📱 Conexiones WhatsApp
 - 💬 Gestión de conversaciones
 - 👥 Administración de leads y contactos
+- 📋 Sistema Kanban para gestión de leads
 - 🤖 Asistente de IA
 - 🔗 Gestión de integraciones de APIs de IA
 - 📊 Panel de control con métricas
@@ -67,7 +68,44 @@ La aplicación incluye un sistema completo de gestión de integraciones con APIs
 - Activa/desactiva según necesites
 - Usa los botones de edición para modificar integraciones existentes
 
+## Sistema Kanban de Leads
+
+La aplicación incluye un sistema completo de gestión de leads estilo Kanban que permite:
+
+### Funcionalidades
+- **Tablero Kanban**: Visualización de leads en columnas personalizables
+- **Drag & Drop**: Arrastra y suelta leads entre diferentes columnas
+- **Gestión de columnas**: Crear, editar y eliminar columnas (excepto la columna inicial)
+- **Columna por defecto**: Cada usuario tiene automáticamente una columna "Nuevos Leads" que no se puede eliminar
+- **Gestión completa de leads**: Crear leads con información detallada (nombre, email, teléfono, empresa, valor, notas)
+- **Colores personalizables**: Asigna colores únicos a cada columna para mejor organización
+- **Feedback visual**: Indicadores visuales durante el arrastre y notificaciones de éxito/error
+
+### Acceso
+1. Ve a **Leads** en el menú lateral
+2. Visualiza tus leads organizados en columnas
+3. Arrastra leads entre columnas para cambiar su estado
+4. Usa los botones para agregar nuevas columnas o leads
+
+### Uso
+- **Crear columna**: Haz clic en "Agregar Columna" para crear una nueva etapa en tu proceso
+- **Gestionar leads**: Agrega nuevos leads con toda su información de contacto y valor
+- **Mover leads**: Simplemente arrastra y suelta para cambiar el estado de un lead
+- **Personalizar**: Edita nombres y colores de columnas para adaptarlas a tu proceso de ventas
+
 ## Cambios Recientes
+
+### v1.5.0 - Sistema Kanban de Leads
+- ✅ **Nueva funcionalidad**: Sistema completo Kanban para gestión de leads
+- ✅ **Drag & Drop**: Implementado con react-beautiful-dnd para mover leads entre columnas
+- ✅ **Gestión de columnas**: CRUD completo para columnas con protección de columna inicial
+- ✅ **Columna por defecto**: Cada usuario obtiene automáticamente una columna "Nuevos Leads"
+- ✅ **Gestión de leads**: Formulario completo para crear leads con todos los campos necesarios
+- ✅ **Colores personalizables**: Sistema de colores para identificar visualmente las columnas
+- ✅ **Interfaz responsive**: Diseño adaptable con scroll horizontal para múltiples columnas
+- ✅ **Feedback visual**: Indicadores durante el arrastre y notificaciones toast
+- ✅ **Integración con base de datos**: Sincronización automática con Supabase
+- ✅ **Ruta protegida**: Acceso seguro a través de `/leads` con autenticación requerida
 
 ### v1.4.0 - Sistema de Integraciones de IA
 - ✅ **Nueva funcionalidad**: Sistema completo de gestión de integraciones de APIs de IA
