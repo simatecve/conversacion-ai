@@ -6,7 +6,7 @@ Aplicación de gestión de leads y conversaciones con integración de WhatsApp e
 
 - 🔐 Autenticación segura con Supabase
 - 📱 Conexiones WhatsApp
-- 💬 Gestión de conversaciones
+- 💬 **Gestión de conversaciones estilo WhatsApp Web**
 - 👥 Administración de leads y contactos
 - 📋 Sistema Kanban para gestión de leads
 - 🤖 Asistente de IA
@@ -93,7 +93,43 @@ La aplicación incluye un sistema completo de gestión de leads estilo Kanban qu
 - **Mover leads**: Simplemente arrastra y suelta para cambiar el estado de un lead
 - **Personalizar**: Edita nombres y colores de columnas para adaptarlas a tu proceso de ventas
 
+## Sistema de Conversaciones
+
+La aplicación incluye un sistema completo de gestión de conversaciones estilo WhatsApp Web que permite:
+
+### Funcionalidades
+- **Interfaz estilo WhatsApp Web**: Diseño familiar y intuitivo con lista de conversaciones y área de chat
+- **Lista de conversaciones**: Visualización de todas las conversaciones con información del contacto, último mensaje y timestamp
+- **Búsqueda en tiempo real**: Busca conversaciones por nombre de contacto o contenido de mensajes
+- **Chat en tiempo real**: Visualización de mensajes con actualizaciones automáticas
+- **Filtrado por instancia**: Solo muestra conversaciones de las instancias de WhatsApp del usuario logueado
+- **Seguridad**: Cada usuario solo ve sus propias conversaciones basadas en sus instancias configuradas
+- **Responsive**: Diseño adaptable para diferentes tamaños de pantalla
+
+### Acceso
+1. Ve a **Conversaciones** en el menú lateral
+2. Selecciona una conversación de la lista para ver los mensajes
+3. Usa la barra de búsqueda para encontrar conversaciones específicas
+
+### Uso
+- **Ver conversaciones**: La lista muestra todas tus conversaciones activas ordenadas por actividad reciente
+- **Buscar**: Escribe en la barra de búsqueda para filtrar conversaciones por contacto o contenido
+- **Leer mensajes**: Haz clic en cualquier conversación para ver el historial completo de mensajes
+- **Actualizaciones automáticas**: Los nuevos mensajes aparecen automáticamente sin necesidad de recargar
+
 ## Cambios Recientes
+
+### v1.6.0 - Sistema de Conversaciones WhatsApp Web
+- ✅ **Nueva funcionalidad**: Sistema completo de gestión de conversaciones estilo WhatsApp Web
+- ✅ **Interfaz moderna**: Diseño que replica la experiencia de WhatsApp Web
+- ✅ **Lista de conversaciones**: Componente que muestra todas las conversaciones con información relevante
+- ✅ **Área de chat**: Visualización de mensajes en tiempo real con diseño intuitivo
+- ✅ **Búsqueda avanzada**: Búsqueda en tiempo real por contacto y contenido de mensajes
+- ✅ **Filtrado por instancia**: Seguridad mejorada mostrando solo conversaciones del usuario logueado
+- ✅ **Servicios optimizados**: `conversationService.ts` con funciones para obtener conversaciones, buscar y gestionar mensajes
+- ✅ **Hooks personalizados**: `useConversations.ts` con React Query para gestión de estado y actualizaciones en tiempo real
+- ✅ **Ruta protegida**: Acceso seguro a través de `/conversaciones` con autenticación requerida
+- ✅ **Responsive design**: Interfaz adaptable para desktop y móvil
 
 ### v1.5.0 - Sistema Kanban de Leads
 - ✅ **Nueva funcionalidad**: Sistema completo Kanban para gestión de leads
