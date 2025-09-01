@@ -230,7 +230,25 @@ const Leads = () => {
   };
 
   const handleCreateLead = async () => {
-    if (!newLead.name.trim() || !newLead.column_id) return;
+    if (!newLead.name.trim()) return;
+
+    // Si no se especifica columna, usar la columna por defecto
+    let targetColumnId = newLead.column_id;
+    if (!targetColumnId) {
+      const defaultColumn = columns.find(col => col.is_default);
+      if (defaultColumn) {
+        targetColumnId = defaultColumn.id;
+      } else if (columns.length > 0) {
+        targetColumnId = columns[0].id;
+      } else {
+        toast({
+          title: "Error",
+          description: "No hay columnas disponibles",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
 
     const { data, error } = await supabase
       .from('leads')
@@ -241,9 +259,9 @@ const Leads = () => {
         company: newLead.company || null,
         value: newLead.value ? parseFloat(newLead.value) : null,
         notes: newLead.notes || null,
-        column_id: newLead.column_id,
+        column_id: targetColumnId,
         user_id: user?.id,
-        position: leads.filter(l => l.column_id === newLead.column_id).length
+        position: leads.filter(l => l.column_id === targetColumnId).length
       })
       .select(`
         *,
