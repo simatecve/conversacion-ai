@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, MoreVertical, Building, Mail, Phone, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, MoreVertical, Building, Mail, Phone, DollarSign, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import AppLayout from '@/components/layout/AppLayout';
 import type { Tables } from '@/integrations/supabase/types';
@@ -42,6 +42,9 @@ const Leads = () => {
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [showColumnDialog, setShowColumnDialog] = useState(false);
   const [showLeadDialog, setShowLeadDialog] = useState(false);
+  const [showConvertDialog, setShowConvertDialog] = useState(false);
+  const [convertingColumn, setConvertingColumn] = useState<LeadColumn | null>(null);
+  const [contactListName, setContactListName] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -107,11 +110,23 @@ const Leads = () => {
   };
 
   const loadLeads = async () => {
+    // Debug: Consultar TODOS los leads sin filtros
+    const { data: allLeads } = await supabase
+      .from('leads')
+      .select('id, name, instancia, user_id');
+    console.log('=== TODOS LOS LEADS EN LA BASE DE DATOS ===');
+    console.log('Total leads:', allLeads?.length);
+    console.log('Leads:', allLeads);
+    
     // Primero obtenemos las instancias del usuario logueado
     const { data: userInstances, error: instancesError } = await supabase
       .from('whatsapp_connections')
       .select('name')
       .eq('user_id', user?.id);
+
+    console.log('=== INSTANCIAS DEL USUARIO ===');
+    console.log('User ID:', user?.id);
+    console.log('User instances:', userInstances);
 
     if (instancesError) {
       console.error('Error loading user instances:', instancesError);
@@ -119,12 +134,17 @@ const Leads = () => {
     }
 
     const instanceNames = userInstances?.map(instance => instance.name) || [];
+    console.log('Instance names extracted:', instanceNames);
 
     // Construir la consulta OR para filtrar por user_id o instancias del usuario
     let orConditions = [`user_id.eq.${user?.id}`];
     instanceNames.forEach(instanceName => {
       orConditions.push(`instancia.eq.${instanceName}`);
     });
+
+    console.log('=== CONDICIONES DE FILTRADO ===');
+    console.log('OR conditions:', orConditions);
+    console.log('Final query:', orConditions.join(','));
 
     const { data, error } = await supabase
       .from('leads')
@@ -140,7 +160,9 @@ const Leads = () => {
       return;
     }
 
-
+    console.log('=== LEADS FILTRADOS ===');
+    console.log('Filtered leads count:', data?.length);
+    console.log('Filtered leads:', data?.map(lead => ({ id: lead.id, name: lead.name, instancia: lead.instancia, user_id: lead.user_id })));
 
     setLeads(data || []);
   };
@@ -399,6 +421,105 @@ const Leads = () => {
     setShowLeadDialog(true);
   };
 
+  const openConvertDialog = (column: LeadColumn) => {
+    setConvertingColumn(column);
+    setContactListName(`Lista de ${column.name}`);
+    setShowConvertDialog(true);
+  };
+
+  const handleConvertToContactList = async () => {
+    if (!convertingColumn || !contactListName.trim()) return;
+
+    try {
+      // Obtener leads de la columna
+      const columnLeads = leads.filter(lead => lead.column_id === convertingColumn.id);
+      
+      if (columnLeads.length === 0) {
+        toast({
+          title: "Error",
+          description: "No hay leads en esta columna para convertir",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Crear la lista de contactos
+      const { data: contactList, error: listError } = await supabase
+        .from('contact_lists')
+        .insert({
+          name: contactListName,
+          description: `Lista creada desde la columna: ${convertingColumn.name}`,
+          user_id: user?.id
+        })
+        .select()
+        .single();
+
+      if (listError) {
+        console.error('Error creating contact list:', listError);
+        toast({
+          title: "Error",
+          description: "Error al crear la lista de contactos",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Convertir leads a contactos
+      const contactsToInsert = [];
+      const contactListMembersToInsert = [];
+
+      for (const lead of columnLeads) {
+        if (lead.phone) { // Solo convertir leads que tengan teléfono
+          // Crear contacto
+          const { data: contact, error: contactError } = await supabase
+            .from('contacts')
+            .insert({
+              name: lead.name,
+              phone_number: lead.phone,
+              email: lead.email,
+              user_id: user?.id
+            })
+            .select()
+            .single();
+
+          if (contactError) {
+            console.error('Error creating contact:', contactError);
+            continue; // Continuar con el siguiente lead
+          }
+
+          // Agregar a la lista de contactos
+          const { error: memberError } = await supabase
+            .from('contact_list_members')
+            .insert({
+              contact_id: contact.id,
+              contact_list_id: contactList.id
+            });
+
+          if (memberError) {
+            console.error('Error adding contact to list:', memberError);
+          }
+        }
+      }
+
+      setShowConvertDialog(false);
+      setConvertingColumn(null);
+      setContactListName('');
+      
+      toast({
+        title: "Éxito",
+        description: `Lista de contactos "${contactListName}" creada correctamente`
+      });
+
+    } catch (error) {
+      console.error('Error converting to contact list:', error);
+      toast({
+        title: "Error",
+        description: "Error al convertir a lista de contactos",
+        variant: "destructive"
+      });
+    }
+  };
+
 
 
   if (loading) {
@@ -437,6 +558,7 @@ const Leads = () => {
           onEditLead={undefined}
           onDeleteLead={handleDeleteLead}
           onMoveLeadToColumn={handleMoveLeadToColumn}
+          onConvertToContactList={openConvertDialog}
         />
 
         {/* Column Dialog */}
@@ -561,6 +683,41 @@ const Leads = () => {
               </Button>
               <Button onClick={handleCreateLead}>
                 Crear Lead
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de conversión a lista de contactos */}
+        <Dialog open={showConvertDialog} onOpenChange={setShowConvertDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Convertir a Lista de Contactos</DialogTitle>
+              <DialogDescription>
+                Convertir todos los leads de la columna "{convertingColumn?.name}" en una lista de contactos.
+                Solo se convertirán los leads que tengan número de teléfono.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="contact-list-name" className="text-right">
+                  Nombre de la lista
+                </Label>
+                <Input
+                  id="contact-list-name"
+                  value={contactListName}
+                  onChange={(e) => setContactListName(e.target.value)}
+                  className="col-span-3"
+                  placeholder="Nombre para la lista de contactos"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowConvertDialog(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleConvertToContactList}>
+                Convertir
               </Button>
             </DialogFooter>
           </DialogContent>

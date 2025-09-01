@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Plus, Edit, Trash2, MoreVertical, Building, Mail, Phone, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, MoreVertical, Building, Mail, Phone, DollarSign, Users } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
@@ -23,6 +23,7 @@ interface KanbanBoardProps {
   onEditLead?: (lead: Lead) => void;
   onDeleteLead?: (leadId: string) => void;
   onMoveLeadToColumn?: (leadId: string, targetColumnId: string) => void;
+  onConvertToContactList?: (column: LeadColumn) => void;
 }
 
 interface LeadCardProps {
@@ -125,7 +126,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onCreateLead,
   onEditLead,
   onDeleteLead,
-  onMoveLeadToColumn
+  onMoveLeadToColumn,
+  onConvertToContactList
 }) => {
   const getLeadsByColumn = (columnId: string) => {
     return leads.filter(lead => lead.column_id === columnId);
@@ -195,6 +197,12 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                           <Edit className="h-4 w-4 mr-2" />
                           Editar
                         </DropdownMenuItem>
+                        {onConvertToContactList && (
+                          <DropdownMenuItem onClick={() => onConvertToContactList(column)}>
+                            <Users className="h-4 w-4 mr-2" />
+                            Convertir a Lista de Contactos
+                          </DropdownMenuItem>
+                        )}
                         {!column.is_default && (
                           <DropdownMenuItem 
                             onClick={() => onDeleteColumn(column.id)}
