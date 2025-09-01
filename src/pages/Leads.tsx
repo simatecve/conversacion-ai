@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, MoreVertical, Building, Mail, Phone, DollarSign, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, MoreVertical, Building, Mail, Phone, DollarSign, Users, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import AppLayout from '@/components/layout/AppLayout';
 import type { Tables } from '@/integrations/supabase/types';
@@ -48,12 +48,29 @@ const Leads = () => {
   const [contactListName, setContactListName] = useState('');
   const [showMessageTriggersDialog, setShowMessageTriggersDialog] = useState(false);
   const [selectedColumnForTriggers, setSelectedColumnForTriggers] = useState<LeadColumn | null>(null);
+  const [searchFilter, setSearchFilter] = useState('');
+  const [filteredLeads, setFilteredLeads] = useState<LeadWithColumn[]>([]);
 
   useEffect(() => {
     if (user) {
       loadData();
     }
   }, [user]);
+
+  // Filtrar leads en tiempo real
+  useEffect(() => {
+    if (!searchFilter.trim()) {
+      setFilteredLeads(leads);
+    } else {
+      const filtered = leads.filter(lead => {
+        const searchTerm = searchFilter.toLowerCase();
+        const nameMatch = lead.name?.toLowerCase().includes(searchTerm);
+        const phoneMatch = lead.phone?.toLowerCase().includes(searchTerm);
+        return nameMatch || phoneMatch;
+      });
+      setFilteredLeads(filtered);
+    }
+  }, [leads, searchFilter]);
 
   const loadData = async () => {
     try {
@@ -561,10 +578,46 @@ const Leads = () => {
           </Button>
         </div>
 
+        {/* Search Filter */}
+        <div className="flex items-center space-x-2 bg-white p-4 rounded-lg border">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="🔍 Filtrar por nombre o número de teléfono..."
+            value={searchFilter}
+            onChange={(e) => setSearchFilter(e.target.value)}
+            className="flex-1"
+          />
+          {searchFilter && (
+             <Button
+               variant="ghost"
+               size="sm"
+               onClick={() => setSearchFilter('')}
+               className="text-muted-foreground hover:text-foreground"
+             >
+               Limpiar
+             </Button>
+           )}
+         </div>
+
+         {/* Filter Results Info */}
+         {searchFilter && (
+           <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-200">
+             <div className="flex items-center space-x-2">
+               <Search className="h-4 w-4 text-blue-600" />
+               <span className="text-sm text-blue-700">
+                 Mostrando {filteredLeads.length} de {leads.length} leads que coinciden con "{searchFilter}"
+               </span>
+             </div>
+             {filteredLeads.length === 0 && (
+               <span className="text-sm text-blue-600">No se encontraron resultados</span>
+             )}
+           </div>
+         )}
+
         {/* Kanban Board */}
         <KanbanBoard
           columns={columns}
-          leads={leads}
+          leads={filteredLeads}
           onEditColumn={openEditColumnDialog}
           onDeleteColumn={handleDeleteColumn}
           onCreateLead={openCreateLeadDialog}
