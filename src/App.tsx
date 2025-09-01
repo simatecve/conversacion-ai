@@ -16,6 +16,7 @@ import Campaigns from "./pages/Campaigns";
 import CreateCampaign from "./pages/CreateCampaign";
 import Settings from "./pages/Settings";
 import Leads from "./pages/Leads";
+import Conversations from "./pages/Conversations";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -77,6 +78,11 @@ const App = () => (
             <Route path="/leads" element={
               <ProtectedRoute>
                 <Leads />
+              </ProtectedRoute>
+            } />
+            <Route path="/conversaciones" element={
+              <ProtectedRoute>
+                <Conversations />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
