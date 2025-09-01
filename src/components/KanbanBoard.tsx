@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Plus, Edit, Trash2, MoreVertical, Building, Mail, Phone, DollarSign, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, MoreVertical, Building, Mail, Phone, DollarSign, Users, MessageSquare } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { TriggerActivationService } from '@/services/triggerActivationService';
 
 type LeadColumn = Tables<'lead_columns'>;
 type Lead = Tables<'leads'>;
@@ -24,6 +25,7 @@ interface KanbanBoardProps {
   onDeleteLead?: (leadId: string) => void;
   onMoveLeadToColumn?: (leadId: string, targetColumnId: string) => void;
   onConvertToContactList?: (column: LeadColumn) => void;
+  onManageMessageTriggers?: (column: LeadColumn) => void;
 }
 
 interface LeadCardProps {
@@ -127,13 +129,14 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onEditLead,
   onDeleteLead,
   onMoveLeadToColumn,
-  onConvertToContactList
+  onConvertToContactList,
+  onManageMessageTriggers
 }) => {
   const getLeadsByColumn = (columnId: string) => {
     return leads.filter(lead => lead.column_id === columnId);
   };
 
-  const handleDragEnd = (result: DropResult) => {
+  const handleDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
 
     if (!destination) {
@@ -149,6 +152,26 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
     // Move lead to different column
     if (destination.droppableId !== source.droppableId && onMoveLeadToColumn) {
+      // Encontrar el lead que se está moviendo
+      const movedLead = leads.find(lead => lead.id === draggableId);
+      
+      if (movedLead && user) {
+        try {
+          // Activar disparadores antes de mover el lead
+          await TriggerActivationService.activateTriggersOnLeadMove({
+            leadId: movedLead.id,
+            leadName: movedLead.name,
+            leadPhone: movedLead.phone || undefined,
+            fromColumnId: source.droppableId,
+            toColumnId: destination.droppableId,
+            userId: user.id
+          });
+        } catch (error) {
+          console.error('Error al activar disparadores:', error);
+          // Continuar con el movimiento aunque falle la activación de disparadores
+        }
+      }
+      
       onMoveLeadToColumn(draggableId, destination.droppableId);
     }
   };
@@ -197,6 +220,12 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                           <Edit className="h-4 w-4 mr-2" />
                           Editar
                         </DropdownMenuItem>
+                        {onManageMessageTriggers && (
+                          <DropdownMenuItem onClick={() => onManageMessageTriggers(column)}>
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Disparadores de Mensaje
+                          </DropdownMenuItem>
+                        )}
                         {onConvertToContactList && (
                           <DropdownMenuItem onClick={() => onConvertToContactList(column)}>
                             <Users className="h-4 w-4 mr-2" />

@@ -14,6 +14,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import KanbanBoard from '@/components/KanbanBoard';
+import { MessageTriggersDialog } from '@/components/MessageTriggersDialog';
 
 type LeadColumn = Tables<'lead_columns'>;
 type Lead = Tables<'leads'>;
@@ -45,6 +46,8 @@ const Leads = () => {
   const [showConvertDialog, setShowConvertDialog] = useState(false);
   const [convertingColumn, setConvertingColumn] = useState<LeadColumn | null>(null);
   const [contactListName, setContactListName] = useState('');
+  const [showMessageTriggersDialog, setShowMessageTriggersDialog] = useState(false);
+  const [selectedColumnForTriggers, setSelectedColumnForTriggers] = useState<LeadColumn | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -427,6 +430,16 @@ const Leads = () => {
     setShowConvertDialog(true);
   };
 
+  const openMessageTriggersDialog = (column: LeadColumn) => {
+    setSelectedColumnForTriggers(column);
+    setShowMessageTriggersDialog(true);
+  };
+
+  const closeMessageTriggersDialog = () => {
+    setShowMessageTriggersDialog(false);
+    setSelectedColumnForTriggers(null);
+  };
+
   const handleConvertToContactList = async () => {
     if (!convertingColumn || !contactListName.trim()) return;
 
@@ -559,6 +572,7 @@ const Leads = () => {
           onDeleteLead={handleDeleteLead}
           onMoveLeadToColumn={handleMoveLeadToColumn}
           onConvertToContactList={openConvertDialog}
+          onManageMessageTriggers={openMessageTriggersDialog}
         />
 
         {/* Column Dialog */}
@@ -722,6 +736,13 @@ const Leads = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Message Triggers Dialog */}
+        <MessageTriggersDialog
+          isOpen={showMessageTriggersDialog}
+          onClose={closeMessageTriggersDialog}
+          column={selectedColumnForTriggers}
+        />
       </div>
     </AppLayout>
   );
