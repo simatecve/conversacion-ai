@@ -113,7 +113,7 @@ const Leads = () => {
         *,
         lead_columns(*)
       `)
-      .eq('user_id', user?.id)
+      .or(`user_id.eq.${user?.id},instancia.eq.${user?.id}`)
       .order('position');
 
     if (error) {
