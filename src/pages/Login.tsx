@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { useToast } from '@/hooks/use-toast';
 import logo2 from '@/assets/logo2.png';
 
@@ -13,14 +14,20 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, user } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      navigate('/');
+    if (user && !profileLoading && profile) {
+      // Redirect based on profile_type
+      if (profile.profile_type === 'superadmin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     }
-  }, [user, navigate]);
+  }, [user, profile, profileLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +58,7 @@ const Login = () => {
         title: "Bienvenido",
         description: "Has iniciado sesión correctamente",
       });
-      navigate('/');
+      // Navigation will be handled by useEffect based on profile_type
     }
 
     setIsLoading(false);

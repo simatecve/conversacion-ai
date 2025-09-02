@@ -18,6 +18,14 @@ import Settings from "./pages/Settings";
 import Leads from "./pages/Leads";
 import Conversations from "./pages/Conversations";
 import NotFound from "./pages/NotFound";
+// Admin pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminPaymentPlans from "./pages/admin/AdminPaymentPlans";
+import AdminPaymentMethods from "./pages/admin/AdminPaymentMethods";
+import AdminStatistics from "./pages/admin/AdminStatistics";
+import AdminMessages from "./pages/admin/AdminMessages";
+import AdminConversations from "./pages/admin/AdminConversations";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +91,42 @@ const App = () => (
             <Route path="/conversaciones" element={
               <ProtectedRoute>
                 <Conversations />
+              </ProtectedRoute>
+            } />
+            {/* Admin Routes */}
+            <Route path="/admin" element={
+              <ProtectedRoute requireSuperAdmin>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/usuarios" element={
+              <ProtectedRoute requireSuperAdmin>
+                <AdminUsers />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/planes-pago" element={
+              <ProtectedRoute requireSuperAdmin>
+                <AdminPaymentPlans />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/metodos-pago" element={
+              <ProtectedRoute requireSuperAdmin>
+                <AdminPaymentMethods />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/estadisticas" element={
+              <ProtectedRoute requireSuperAdmin>
+                <AdminStatistics />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/mensajes" element={
+              <ProtectedRoute requireSuperAdmin>
+                <AdminMessages />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/conversaciones" element={
+              <ProtectedRoute requireSuperAdmin>
+                <AdminConversations />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
