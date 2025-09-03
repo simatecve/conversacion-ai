@@ -1,17 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageTriggerService } from '../services/messageTriggerService';
 import { MessageTrigger, MessageTriggerInsert, MessageTriggerUpdate } from '../types/messageTriggers';
-import { useAuth } from './useAuth';
+import { useEffectiveUserId } from './useEffectiveUserId';
 import { toast } from 'sonner';
 
 // Hook para obtener todos los disparadores del usuario
 export const useMessageTriggers = () => {
-  const { user } = useAuth();
+  const { effectiveUserId } = useEffectiveUserId();
   
   return useQuery({
-    queryKey: ['messageTriggers', user?.id],
-    queryFn: () => MessageTriggerService.getMessageTriggers(user!.id),
-    enabled: !!user?.id,
+    queryKey: ['messageTriggers', effectiveUserId],
+    queryFn: () => MessageTriggerService.getMessageTriggers(effectiveUserId!),
+    enabled: !!effectiveUserId,
   });
 };
 
@@ -35,19 +35,18 @@ export const useMessageTrigger = (id: string) => {
 
 // Hook para obtener disparadores con información de columna
 export const useMessageTriggersWithColumnInfo = () => {
-  const { user } = useAuth();
+  const { effectiveUserId } = useEffectiveUserId();
   
   return useQuery({
-    queryKey: ['messageTriggersWithColumnInfo', user?.id],
-    queryFn: () => MessageTriggerService.getMessageTriggersWithColumnInfo(user!.id),
-    enabled: !!user?.id,
+    queryKey: ['messageTriggersWithColumnInfo', effectiveUserId],
+    queryFn: () => MessageTriggerService.getMessageTriggersWithColumnInfo(effectiveUserId!),
+    enabled: !!effectiveUserId,
   });
 };
 
 // Hook para crear un disparador
 export const useCreateMessageTrigger = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   return useMutation({
     mutationFn: (trigger: MessageTriggerInsert) => 

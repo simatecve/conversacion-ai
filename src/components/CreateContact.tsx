@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -25,7 +25,7 @@ const CreateContact: React.FC<CreateContactProps> = ({
   defaultContactListId,
   showContactListSelector = true
 }) => {
-  const { user } = useAuth();
+  const { effectiveUserId } = useEffectiveUserId();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [contactLists, setContactLists] = useState<ContactList[]>([]);
@@ -37,10 +37,10 @@ const CreateContact: React.FC<CreateContactProps> = ({
   });
 
   useEffect(() => {
-    if (user && showContactListSelector) {
+    if (effectiveUserId && showContactListSelector) {
       fetchContactLists();
     }
-  }, [user, showContactListSelector]);
+  }, [effectiveUserId, showContactListSelector]);
 
   useEffect(() => {
     if (defaultContactListId) {
@@ -49,11 +49,13 @@ const CreateContact: React.FC<CreateContactProps> = ({
   }, [defaultContactListId]);
 
   const fetchContactLists = async () => {
+    if (!effectiveUserId) return;
+    
     try {
       const { data, error } = await supabase
         .from('contact_lists')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', effectiveUserId)
         .order('name');
 
       if (error) throw error;
@@ -84,7 +86,7 @@ const CreateContact: React.FC<CreateContactProps> = ({
       return;
     }
 
-    if (!user) {
+    if (!effectiveUserId) {
       toast({
         title: 'Error',
         description: 'Debes estar autenticado para crear un contacto',
@@ -103,7 +105,7 @@ const CreateContact: React.FC<CreateContactProps> = ({
           name: formData.name.trim(),
           phone_number: formData.phone_number.trim(),
           email: formData.email.trim() || null,
-          user_id: user.id
+          user_id: effectiveUserId
         })
         .select()
         .single();

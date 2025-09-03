@@ -4,6 +4,7 @@ import ConversationList from '@/components/conversations/ConversationList';
 import ChatArea from '@/components/conversations/ChatArea';
 import { useConversations, useMessages, useSearchConversations } from '@/hooks/useConversations';
 import { useAuth } from '@/hooks/useAuth';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 import { Database } from '@/integrations/supabase/types';
 
 type Conversation = Database['public']['Tables']['conversations']['Row'];
@@ -11,6 +12,7 @@ type Message = Database['public']['Tables']['messages']['Row'];
 
 const Conversations = () => {
   const { user } = useAuth();
+  const { effectiveUserId } = useEffectiveUserId();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [newMessage, setNewMessage] = useState('');
@@ -33,7 +35,7 @@ const Conversations = () => {
 
   // Manejar envío de mensaje
   const handleSendMessage = (messageText: string) => {
-    if (!messageText.trim() || !selectedConversation || !user) return;
+    if (!messageText.trim() || !selectedConversation || !effectiveUserId) return;
 
     sendMessage({
       conversation_id: selectedConversation.id,
@@ -41,7 +43,7 @@ const Conversations = () => {
       direction: 'outgoing',
       whatsapp_number: selectedConversation.whatsapp_number,
       instance_name: selectedConversation.instance_name || '',
-      user_id: user.id,
+      user_id: effectiveUserId,
       message_type: 'text',
       is_bot: false,
     });

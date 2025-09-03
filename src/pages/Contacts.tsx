@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +23,7 @@ interface ContactWithMembership extends Contact {
 
 const Contacts = () => {
   const { listId } = useParams<{ listId: string }>();
-  const { user } = useAuth();
+  const { effectiveUserId } = useEffectiveUserId();
   const navigate = useNavigate();
   const [contactList, setContactList] = useState<ContactList | null>(null);
   const [contacts, setContacts] = useState<ContactWithMembership[]>([]);
@@ -41,20 +41,22 @@ const Contacts = () => {
   });
 
   useEffect(() => {
-    if (user && listId) {
+    if (effectiveUserId && listId) {
       fetchContactList();
       fetchContacts();
       fetchAllContacts();
     }
-  }, [user, listId]);
+  }, [effectiveUserId, listId]);
 
   const fetchContactList = async () => {
+    if (!effectiveUserId) return;
+    
     try {
       const { data, error } = await supabase
         .from('contact_lists')
         .select('*')
         .eq('id', listId)
-        .eq('user_id', user?.id)
+        .eq('user_id', effectiveUserId)
         .single();
 
       if (error) throw error;
@@ -71,6 +73,8 @@ const Contacts = () => {
   };
 
   const fetchContacts = async () => {
+    if (!effectiveUserId) return;
+    
     try {
       setLoading(true);
       
@@ -84,7 +88,7 @@ const Contacts = () => {
           )
         `)
         .eq('contact_list_members.contact_list_id', listId)
-        .eq('user_id', user?.id)
+        .eq('user_id', effectiveUserId)
         .order('name');
 
       if (error) throw error;
@@ -102,11 +106,13 @@ const Contacts = () => {
   };
 
   const fetchAllContacts = async () => {
+    if (!effectiveUserId) return;
+    
     try {
       const { data, error } = await supabase
         .from('contacts')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', effectiveUserId)
         .order('name');
 
       if (error) throw error;
@@ -134,7 +140,7 @@ const Contacts = () => {
           name: formData.name.trim(),
           phone_number: formData.phone_number.trim(),
           email: formData.email.trim() || null,
-          user_id: user?.id!
+          user_id: effectiveUserId!
         })
         .select()
         .single();

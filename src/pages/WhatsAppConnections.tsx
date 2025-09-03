@@ -9,6 +9,7 @@ import { Plus, Phone, List, Trash2, QrCode } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 import AppLayout from '@/components/layout/AppLayout';
 
 interface WhatsAppConnection {
@@ -47,6 +48,7 @@ const WhatsAppConnections = () => {
   });
   const { toast } = useToast();
   const { user } = useAuth();
+  const { effectiveUserId } = useEffectiveUserId();
 
   useEffect(() => {
     fetchConnections();
@@ -214,7 +216,7 @@ const WhatsAppConnections = () => {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('first_name, last_name, phone, company_name, plan_type, profile_type')
-        .eq('id', user.id)
+        .eq('id', effectiveUserId)
         .single();
 
       if (profileError && profileError.code !== 'PGRST116') {
@@ -224,7 +226,7 @@ const WhatsAppConnections = () => {
       // Preparar todos los datos del usuario para enviar al webhook
       const userData = {
         // Datos de autenticación
-        user_id: user.id,
+        user_id: effectiveUserId,
         email: user.email,
         
         // Datos del perfil
@@ -266,7 +268,7 @@ const WhatsAppConnections = () => {
       const { data, error } = await supabase
         .from('whatsapp_connections')
         .insert({
-          user_id: user.id,
+          user_id: effectiveUserId,
           name: formData.name,
           phone_number: formData.phone_number,
           color: formData.color,

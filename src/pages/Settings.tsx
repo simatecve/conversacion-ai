@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 import AppLayout from '@/components/layout/AppLayout';
 import Integrations from '@/components/Integrations';
 import { User, Lock, Phone, Building, Mail, Save, Eye, EyeOff, Settings as SettingsIcon, Key } from 'lucide-react';
@@ -41,6 +42,7 @@ const Settings = () => {
   const [changingPassword, setChangingPassword] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { effectiveUserId } = useEffectiveUserId();
 
   useEffect(() => {
     fetchProfile();
@@ -48,12 +50,12 @@ const Settings = () => {
 
   const fetchProfile = async () => {
     try {
-      if (!user?.id) return;
+      if (!effectiveUserId) return;
       
       const { data, error } = await supabase
         .from('profiles')
         .select('first_name, last_name, phone, company_name')
-        .eq('id', user.id)
+        .eq('id', effectiveUserId)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -77,14 +79,14 @@ const Settings = () => {
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.id) return;
+    if (!effectiveUserId) return;
 
     setSaving(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .upsert({
-          id: user.id,
+          id: effectiveUserId,
           ...profile,
           updated_at: new Date().toISOString()
         });

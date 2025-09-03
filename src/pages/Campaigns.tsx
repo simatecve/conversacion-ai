@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ type Campaign = Database['public']['Tables']['mass_campaigns']['Row'];
 type ContactList = Database['public']['Tables']['contact_lists']['Row'];
 
 export function Campaigns() {
-  const { user } = useAuth();
+  const { effectiveUserId } = useEffectiveUserId();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -25,18 +25,20 @@ export function Campaigns() {
   const [sendingCampaign, setSendingCampaign] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
+    if (effectiveUserId) {
       fetchCampaigns();
       fetchContactLists();
     }
-  }, [user]);
+  }, [effectiveUserId]);
 
   const fetchCampaigns = async () => {
+    if (!effectiveUserId) return;
+    
     try {
       const { data, error } = await supabase
         .from('mass_campaigns')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', effectiveUserId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -54,11 +56,13 @@ export function Campaigns() {
   };
 
   const fetchContactLists = async () => {
+    if (!effectiveUserId) return;
+    
     try {
       const { data, error } = await supabase
         .from('contact_lists')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', effectiveUserId)
         .order('name');
 
       if (error) throw error;

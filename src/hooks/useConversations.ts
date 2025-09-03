@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ConversationService, ConversationWithLastMessage } from '@/services/conversationService';
-import { useAuth } from './useAuth';
+import { useEffectiveUserId } from './useEffectiveUserId';
 import { Database } from '@/integrations/supabase/types';
 import { useEffect } from 'react';
 import { useToast } from './use-toast';
@@ -12,24 +12,24 @@ type MessageInsert = Database['public']['Tables']['messages']['Insert'];
  * Hook para gestionar conversaciones
  */
 export const useConversations = () => {
-  const { user } = useAuth();
+  const { effectiveUserId } = useEffectiveUserId();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Query para obtener todas las conversaciones
   const conversationsQuery = useQuery({
-    queryKey: ['conversations', user?.id],
-    queryFn: () => ConversationService.getConversations(user?.id || ''),
-    enabled: !!user?.id,
+    queryKey: ['conversations', effectiveUserId],
+    queryFn: () => ConversationService.getConversations(effectiveUserId || ''),
+    enabled: !!effectiveUserId,
     staleTime: 30000, // 30 segundos
     refetchInterval: 60000, // Refetch cada minuto
   });
 
   // Query para obtener el conteo de no leídos
   const unreadCountQuery = useQuery({
-    queryKey: ['unreadCount', user?.id],
-    queryFn: () => ConversationService.getUnreadCount(user?.id || ''),
-    enabled: !!user?.id,
+    queryKey: ['unreadCount', effectiveUserId],
+    queryFn: () => ConversationService.getUnreadCount(effectiveUserId || ''),
+    enabled: !!effectiveUserId,
     staleTime: 10000, // 10 segundos
     refetchInterval: 30000, // Refetch cada 30 segundos
   });
@@ -55,10 +55,10 @@ export const useConversations = () => {
 
   // Suscripción a cambios en tiempo real
   useEffect(() => {
-    if (!user?.id) return;
+    if (!effectiveUserId) return;
 
     const subscription = ConversationService.subscribeToConversations(
-      user.id,
+      effectiveUserId,
       (payload) => {
         console.log('Conversation change:', payload);
         // Invalidar queries para refrescar datos
@@ -70,7 +70,7 @@ export const useConversations = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [user?.id, queryClient]);
+  }, [effectiveUserId, queryClient]);
 
   return {
     conversations: conversationsQuery.data || [],
@@ -87,12 +87,12 @@ export const useConversations = () => {
  * Hook para buscar conversaciones
  */
 export const useSearchConversations = (searchTerm: string) => {
-  const { user } = useAuth();
+  const { effectiveUserId } = useEffectiveUserId();
 
   return useQuery({
-    queryKey: ['searchConversations', user?.id, searchTerm],
-    queryFn: () => ConversationService.searchConversations(user?.id || '', searchTerm),
-    enabled: !!user?.id && searchTerm.length > 0,
+    queryKey: ['searchConversations', effectiveUserId, searchTerm],
+    queryFn: () => ConversationService.searchConversations(effectiveUserId || '', searchTerm),
+    enabled: !!effectiveUserId && searchTerm.length > 0,
     staleTime: 10000,
   });
 };
@@ -102,14 +102,14 @@ export const useSearchConversations = (searchTerm: string) => {
  */
 export const useMessages = (conversationId: string | null) => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { effectiveUserId } = useEffectiveUserId();
   const queryClient = useQueryClient();
 
   // Query para obtener mensajes
   const messagesQuery = useQuery({
     queryKey: ['messages', conversationId],
-    queryFn: () => ConversationService.getMessages(conversationId || '', user?.id || ''),
-    enabled: !!conversationId && !!user?.id,
+    queryFn: () => ConversationService.getMessages(conversationId || '', effectiveUserId || ''),
+    enabled: !!conversationId && !!effectiveUserId,
     staleTime: 10000,
   });
 
