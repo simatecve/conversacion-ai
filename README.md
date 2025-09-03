@@ -154,6 +154,15 @@ La aplicación incluye un sistema completo de gestión de conversaciones estilo 
 - ✅ **UI moderna**: Interfaz limpia usando shadcn/ui components
 - ✅ **Feedback visual**: Toasts para confirmaciones y notificaciones
 
+### v1.4.0 - Correcciones en Diálogo de Edición de Suscripciones
+- ✅ **Corrección crítica**: Solucionados errores de `Select` con valores vacíos en el diálogo de edición de suscripciones
+- ✅ **Manejo de valores nulos**: Implementado manejo correcto de valores vacíos usando `|| undefined` en todos los componentes `Select`
+- ✅ **Validación de datos**: Agregada validación para verificar que los datos de usuarios y planes estén cargados antes de abrir el diálogo
+- ✅ **Error Boundary**: Implementado componente `ErrorBoundary` para manejar errores de renderizado graciosamente
+- ✅ **Placeholders descriptivos**: Agregados placeholders informativos en todos los campos `Select`
+- ✅ **Manejo de payment_method_id**: Corregido el manejo de `payment_method_id` para usar 'none' en lugar de cadena vacía
+- ✅ **Experiencia de usuario**: Mejorada la experiencia del usuario con mejor manejo de errores y feedback visual
+
 ### v1.3.0 - Mejoras en Agentes de IA y Navegación
 - ✅ **Corrección crítica**: Solucionado error de `SelectItem` con valores vacíos que causaba fallos en la aplicación
 - ✅ **Visualización mejorada**: Las conexiones WhatsApp ahora muestran su estatus (conectado/desconectado) con indicadores visuales
