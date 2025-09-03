@@ -25,9 +25,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Database } from '@/integrations/supabase/types';
 
-type PaymentPlan = Database['public']['Tables']['payment_plans']['Row'];
-type PaymentPlanInsert = Database['public']['Tables']['payment_plans']['Insert'];
-type PaymentPlanUpdate = Database['public']['Tables']['payment_plans']['Update'];
+type PaymentPlan = Database['public']['Tables']['subscription_plans']['Row'];
+type PaymentPlanInsert = Database['public']['Tables']['subscription_plans']['Insert'];
+type PaymentPlanUpdate = Database['public']['Tables']['subscription_plans']['Update'];
 
 const AdminPaymentPlans = () => {
   const [plans, setPlans] = useState<PaymentPlan[]>([]);
@@ -40,14 +40,14 @@ const AdminPaymentPlans = () => {
     name: '',
     description: '',
     price: '',
-    currency: 'USD',
-    billing_period: 'monthly',
-    features: '',
     is_active: true,
-    is_popular: false,
-    max_users: '',
-    max_campaigns: '',
-    max_contacts: ''
+    max_bot_responses: '',
+    max_contacts: '',
+    max_conversations: '',
+    max_device_sessions: '',
+    max_monthly_campaigns: '',
+    max_storage_mb: '',
+    max_whatsapp_connections: ''
   });
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -62,7 +62,7 @@ const AdminPaymentPlans = () => {
       setLoading(true);
       
       const { data, error } = await supabase
-        .from('payment_plans')
+        .from('subscription_plans')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -97,18 +97,18 @@ const AdminPaymentPlans = () => {
         name: formData.name,
         description: formData.description || null,
         price: parseFloat(formData.price),
-        currency: formData.currency,
-        billing_period: formData.billing_period,
-        features: formData.features ? formData.features.split('\n').filter(f => f.trim()) : null,
         is_active: formData.is_active,
-        is_popular: formData.is_popular,
-        max_users: formData.max_users ? parseInt(formData.max_users) : null,
-        max_campaigns: formData.max_campaigns ? parseInt(formData.max_campaigns) : null,
-        max_contacts: formData.max_contacts ? parseInt(formData.max_contacts) : null
+        max_bot_responses: parseInt(formData.max_bot_responses),
+        max_contacts: parseInt(formData.max_contacts),
+        max_conversations: formData.max_conversations ? parseInt(formData.max_conversations) : 0,
+        max_device_sessions: formData.max_device_sessions ? parseInt(formData.max_device_sessions) : 0,
+        max_monthly_campaigns: parseInt(formData.max_monthly_campaigns),
+        max_storage_mb: parseInt(formData.max_storage_mb),
+        max_whatsapp_connections: parseInt(formData.max_whatsapp_connections)
       };
 
       const { error } = await supabase
-        .from('payment_plans')
+        .from('subscription_plans')
         .insert(planData);
 
       if (error) throw error;
@@ -143,18 +143,18 @@ const AdminPaymentPlans = () => {
         name: formData.name,
         description: formData.description || null,
         price: parseFloat(formData.price),
-        currency: formData.currency,
-        billing_period: formData.billing_period,
-        features: formData.features ? formData.features.split('\n').filter(f => f.trim()) : null,
         is_active: formData.is_active,
-        is_popular: formData.is_popular,
-        max_users: formData.max_users ? parseInt(formData.max_users) : null,
-        max_campaigns: formData.max_campaigns ? parseInt(formData.max_campaigns) : null,
-        max_contacts: formData.max_contacts ? parseInt(formData.max_contacts) : null
+        max_bot_responses: parseInt(formData.max_bot_responses),
+        max_contacts: parseInt(formData.max_contacts),
+        max_conversations: formData.max_conversations ? parseInt(formData.max_conversations) : 0,
+        max_device_sessions: formData.max_device_sessions ? parseInt(formData.max_device_sessions) : 0,
+        max_monthly_campaigns: parseInt(formData.max_monthly_campaigns),
+        max_storage_mb: parseInt(formData.max_storage_mb),
+        max_whatsapp_connections: parseInt(formData.max_whatsapp_connections)
       };
 
       const { error } = await supabase
-        .from('payment_plans')
+        .from('subscription_plans')
         .update(planData)
         .eq('id', selectedPlan.id);
 
@@ -183,7 +183,7 @@ const AdminPaymentPlans = () => {
   const handleDeletePlan = async (planId: string) => {
     try {
       const { error } = await supabase
-        .from('payment_plans')
+        .from('subscription_plans')
         .delete()
         .eq('id', planId);
 
@@ -205,20 +205,45 @@ const AdminPaymentPlans = () => {
     }
   };
 
+  const handleTogglePlanStatus = async (planId: string, newStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('subscription_plans')
+        .update({ is_active: newStatus })
+        .eq('id', planId);
+
+      if (error) throw error;
+
+      toast({
+        title: newStatus ? "Plan activado" : "Plan desactivado",
+        description: `El plan ha sido ${newStatus ? 'activado' : 'desactivado'} correctamente`,
+      });
+
+      fetchPlans();
+    } catch (error: any) {
+      console.error('Error toggling plan status:', error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo cambiar el estado del plan",
+        variant: "destructive",
+      });
+    }
+  };
+
   const openEditDialog = (plan: PaymentPlan) => {
     setSelectedPlan(plan);
     setFormData({
       name: plan.name,
       description: plan.description || '',
       price: plan.price.toString(),
-      currency: plan.currency,
-      billing_period: plan.billing_period,
-      features: plan.features ? plan.features.join('\n') : '',
       is_active: plan.is_active,
-      is_popular: plan.is_popular || false,
-      max_users: plan.max_users?.toString() || '',
-      max_campaigns: plan.max_campaigns?.toString() || '',
-      max_contacts: plan.max_contacts?.toString() || ''
+      max_bot_responses: plan.max_bot_responses.toString(),
+      max_contacts: plan.max_contacts.toString(),
+      max_conversations: plan.max_conversations?.toString() || '0',
+      max_device_sessions: plan.max_device_sessions?.toString() || '0',
+      max_monthly_campaigns: plan.max_monthly_campaigns.toString(),
+      max_storage_mb: plan.max_storage_mb.toString(),
+      max_whatsapp_connections: plan.max_whatsapp_connections.toString()
     });
     setIsEditDialogOpen(true);
   };
@@ -228,14 +253,14 @@ const AdminPaymentPlans = () => {
       name: '',
       description: '',
       price: '',
-      currency: 'USD',
-      billing_period: 'monthly',
-      features: '',
       is_active: true,
-      is_popular: false,
-      max_users: '',
-      max_campaigns: '',
-      max_contacts: ''
+      max_bot_responses: '',
+      max_contacts: '',
+      max_conversations: '',
+      max_device_sessions: '',
+      max_monthly_campaigns: '',
+      max_storage_mb: '',
+      max_whatsapp_connections: ''
     });
   };
 
@@ -315,57 +340,7 @@ const AdminPaymentPlans = () => {
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="currency">Moneda</Label>
-                    <Input
-                      id="currency"
-                      value={formData.currency}
-                      onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                      placeholder="USD"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="billing_period">Período</Label>
-                    <Input
-                      id="billing_period"
-                      value={formData.billing_period}
-                      onChange={(e) => setFormData({ ...formData, billing_period: e.target.value })}
-                      placeholder="monthly"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Estado</Label>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        checked={formData.is_active}
-                        onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                      />
-                      <span className="text-sm">Activo</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="max_users">Máx. Usuarios</Label>
-                    <Input
-                      id="max_users"
-                      type="number"
-                      value={formData.max_users}
-                      onChange={(e) => setFormData({ ...formData, max_users: e.target.value })}
-                      placeholder="10"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="max_campaigns">Máx. Campañas</Label>
-                    <Input
-                      id="max_campaigns"
-                      type="number"
-                      value={formData.max_campaigns}
-                      onChange={(e) => setFormData({ ...formData, max_campaigns: e.target.value })}
-                      placeholder="50"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="max_contacts">Máx. Contactos</Label>
+                    <Label htmlFor="max_contacts">Máx. Contactos *</Label>
                     <Input
                       id="max_contacts"
                       type="number"
@@ -374,24 +349,80 @@ const AdminPaymentPlans = () => {
                       placeholder="1000"
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="max_monthly_campaigns">Máx. Campañas/Mes *</Label>
+                    <Input
+                      id="max_monthly_campaigns"
+                      type="number"
+                      value={formData.max_monthly_campaigns}
+                      onChange={(e) => setFormData({ ...formData, max_monthly_campaigns: e.target.value })}
+                      placeholder="10"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="max_whatsapp_connections">Máx. Conexiones WhatsApp *</Label>
+                    <Input
+                      id="max_whatsapp_connections"
+                      type="number"
+                      value={formData.max_whatsapp_connections}
+                      onChange={(e) => setFormData({ ...formData, max_whatsapp_connections: e.target.value })}
+                      placeholder="5"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="max_bot_responses">Máx. Respuestas Bot *</Label>
+                    <Input
+                      id="max_bot_responses"
+                      type="number"
+                      value={formData.max_bot_responses}
+                      onChange={(e) => setFormData({ ...formData, max_bot_responses: e.target.value })}
+                      placeholder="500"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="max_storage_mb">Máx. Almacenamiento (MB) *</Label>
+                    <Input
+                      id="max_storage_mb"
+                      type="number"
+                      value={formData.max_storage_mb}
+                      onChange={(e) => setFormData({ ...formData, max_storage_mb: e.target.value })}
+                      placeholder="1024"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="max_conversations">Máx. Conversaciones</Label>
+                    <Input
+                      id="max_conversations"
+                      type="number"
+                      value={formData.max_conversations}
+                      onChange={(e) => setFormData({ ...formData, max_conversations: e.target.value })}
+                      placeholder="100"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="features">Características (una por línea)</Label>
-                  <Textarea
-                    id="features"
-                    value={formData.features}
-                    onChange={(e) => setFormData({ ...formData, features: e.target.value })}
-                    placeholder="Envío de mensajes ilimitado\nSoporte 24/7\nIntegraciones avanzadas"
-                    rows={4}
+                  <Label htmlFor="max_device_sessions">Máx. Sesiones de Dispositivo</Label>
+                  <Input
+                    id="max_device_sessions"
+                    type="number"
+                    value={formData.max_device_sessions}
+                    onChange={(e) => setFormData({ ...formData, max_device_sessions: e.target.value })}
+                    placeholder="3"
                   />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={formData.is_popular}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_popular: checked })}
-                  />
-                  <Label>Marcar como popular</Label>
+                <div className="space-y-2">
+                  <Label>Estado</Label>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                    />
+                    <span className="text-sm">Activo</span>
+                  </div>
                 </div>
+
                 <div className="flex justify-end space-x-2">
                   <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Cancelar
@@ -424,15 +455,7 @@ const AdminPaymentPlans = () => {
         {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPlans.map((plan) => (
-            <Card key={plan.id} className={`relative ${plan.is_popular ? 'ring-2 ring-primary' : ''}`}>
-              {plan.is_popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-primary text-primary-foreground">
-                    <Star className="h-3 w-3 mr-1" />
-                    Popular
-                  </Badge>
-                </div>
-              )}
+            <Card key={plan.id} className="relative">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-xl">{plan.name}</CardTitle>
@@ -446,7 +469,7 @@ const AdminPaymentPlans = () => {
                 </div>
                 <div className="flex items-baseline space-x-1">
                   <span className="text-3xl font-bold">${plan.price}</span>
-                  <span className="text-gray-500">/{plan.billing_period}</span>
+                  <span className="text-gray-500">/mes</span>
                 </div>
                 {plan.description && (
                   <p className="text-gray-600 text-sm">{plan.description}</p>
@@ -456,76 +479,104 @@ const AdminPaymentPlans = () => {
                 <div className="space-y-4">
                   {/* Limits */}
                   <div className="space-y-2">
-                    {plan.max_users && (
-                      <div className="flex justify-between text-sm">
-                        <span>Usuarios:</span>
-                        <span className="font-medium">{plan.max_users}</span>
-                      </div>
-                    )}
-                    {plan.max_campaigns && (
-                      <div className="flex justify-between text-sm">
-                        <span>Campañas:</span>
-                        <span className="font-medium">{plan.max_campaigns}</span>
-                      </div>
-                    )}
                     {plan.max_contacts && (
                       <div className="flex justify-between text-sm">
                         <span>Contactos:</span>
                         <span className="font-medium">{plan.max_contacts}</span>
                       </div>
                     )}
+                    {plan.max_monthly_campaigns && (
+                      <div className="flex justify-between text-sm">
+                        <span>Campañas Mensuales:</span>
+                        <span className="font-medium">{plan.max_monthly_campaigns}</span>
+                      </div>
+                    )}
+                    {plan.max_whatsapp_connections && (
+                      <div className="flex justify-between text-sm">
+                        <span>Conexiones WhatsApp:</span>
+                        <span className="font-medium">{plan.max_whatsapp_connections}</span>
+                      </div>
+                    )}
+                    {plan.max_bot_responses && (
+                      <div className="flex justify-between text-sm">
+                        <span>Respuestas Bot:</span>
+                        <span className="font-medium">{plan.max_bot_responses}</span>
+                      </div>
+                    )}
+                    {plan.max_storage_mb && (
+                      <div className="flex justify-between text-sm">
+                        <span>Almacenamiento:</span>
+                        <span className="font-medium">{plan.max_storage_mb} MB</span>
+                      </div>
+                    )}
+                    {plan.max_conversations && (
+                      <div className="flex justify-between text-sm">
+                        <span>Conversaciones:</span>
+                        <span className="font-medium">{plan.max_conversations}</span>
+                      </div>
+                    )}
+                    {plan.max_device_sessions && (
+                      <div className="flex justify-between text-sm">
+                        <span>Sesiones de Dispositivo:</span>
+                        <span className="font-medium">{plan.max_device_sessions}</span>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Features */}
-                  {plan.features && plan.features.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-sm mb-2">Características:</h4>
-                      <ul className="space-y-1">
-                        {plan.features.slice(0, 3).map((feature, index) => (
-                          <li key={index} className="text-sm text-gray-600 flex items-center">
-                            <CheckCircle className="h-3 w-3 text-green-500 mr-2 flex-shrink-0" />
-                            {feature}
-                          </li>
-                        ))}
-                        {plan.features.length > 3 && (
-                          <li className="text-sm text-gray-500">+{plan.features.length - 3} más...</li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
+
 
                   {/* Actions */}
-                  <div className="flex items-center space-x-2 pt-4">
+                  <div className="space-y-2 pt-4">
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditDialog(plan)}
+                        className="flex-1"
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Editar
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Eliminar plan?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta acción no se puede deshacer. Se eliminará permanentemente el plan de pago.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeletePlan(plan.id)}>
+                              Eliminar
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                     <Button
-                      variant="outline"
+                      variant={plan.is_active ? "destructive" : "default"}
                       size="sm"
-                      onClick={() => openEditDialog(plan)}
-                      className="flex-1"
+                      onClick={() => handleTogglePlanStatus(plan.id, !plan.is_active)}
+                      className="w-full"
                     >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Editar
+                      {plan.is_active ? (
+                        <>
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Desactivar
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Activar
+                        </>
+                      )}
                     </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>¿Eliminar plan?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Esta acción no se puede deshacer. Se eliminará permanentemente el plan de pago.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeletePlan(plan.id)}>
-                            Eliminar
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
                   </div>
 
                   {/* Created date */}
@@ -589,21 +640,23 @@ const AdminPaymentPlans = () => {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="edit_currency">Moneda</Label>
+                  <Label htmlFor="edit_max_contacts">Máx. Contactos</Label>
                   <Input
-                    id="edit_currency"
-                    value={formData.currency}
-                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    placeholder="USD"
+                    id="edit_max_contacts"
+                    type="number"
+                    value={formData.max_contacts}
+                    onChange={(e) => setFormData({ ...formData, max_contacts: e.target.value })}
+                    placeholder="1000"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="edit_billing_period">Período</Label>
+                  <Label htmlFor="edit_max_monthly_campaigns">Máx. Campañas Mensuales</Label>
                   <Input
-                    id="edit_billing_period"
-                    value={formData.billing_period}
-                    onChange={(e) => setFormData({ ...formData, billing_period: e.target.value })}
-                    placeholder="monthly"
+                    id="edit_max_monthly_campaigns"
+                    type="number"
+                    value={formData.max_monthly_campaigns}
+                    onChange={(e) => setFormData({ ...formData, max_monthly_campaigns: e.target.value })}
+                    placeholder="50"
                   />
                 </div>
                 <div className="space-y-2">
@@ -619,52 +672,57 @@ const AdminPaymentPlans = () => {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="edit_max_users">Máx. Usuarios</Label>
+                  <Label htmlFor="edit_max_whatsapp_connections">Máx. Conexiones WhatsApp</Label>
                   <Input
-                    id="edit_max_users"
+                    id="edit_max_whatsapp_connections"
                     type="number"
-                    value={formData.max_users}
-                    onChange={(e) => setFormData({ ...formData, max_users: e.target.value })}
-                    placeholder="10"
+                    value={formData.max_whatsapp_connections}
+                    onChange={(e) => setFormData({ ...formData, max_whatsapp_connections: e.target.value })}
+                    placeholder="5"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="edit_max_campaigns">Máx. Campañas</Label>
+                  <Label htmlFor="edit_max_bot_responses">Máx. Respuestas Bot</Label>
                   <Input
-                    id="edit_max_campaigns"
+                    id="edit_max_bot_responses"
                     type="number"
-                    value={formData.max_campaigns}
-                    onChange={(e) => setFormData({ ...formData, max_campaigns: e.target.value })}
-                    placeholder="50"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit_max_contacts">Máx. Contactos</Label>
-                  <Input
-                    id="edit_max_contacts"
-                    type="number"
-                    value={formData.max_contacts}
-                    onChange={(e) => setFormData({ ...formData, max_contacts: e.target.value })}
+                    value={formData.max_bot_responses}
+                    onChange={(e) => setFormData({ ...formData, max_bot_responses: e.target.value })}
                     placeholder="1000"
                   />
                 </div>
+                <div>
+                  <Label htmlFor="edit_max_storage_mb">Máx. Almacenamiento (MB)</Label>
+                  <Input
+                    id="edit_max_storage_mb"
+                    type="number"
+                    value={formData.max_storage_mb}
+                    onChange={(e) => setFormData({ ...formData, max_storage_mb: e.target.value })}
+                    placeholder="1024"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="edit_features">Características (una por línea)</Label>
-                <Textarea
-                  id="edit_features"
-                  value={formData.features}
-                  onChange={(e) => setFormData({ ...formData, features: e.target.value })}
-                  placeholder="Envío de mensajes ilimitado\nSoporte 24/7\nIntegraciones avanzadas"
-                  rows={4}
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={formData.is_popular}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_popular: checked })}
-                />
-                <Label>Marcar como popular</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_max_conversations">Máx. Conversaciones</Label>
+                  <Input
+                    id="edit_max_conversations"
+                    type="number"
+                    value={formData.max_conversations}
+                    onChange={(e) => setFormData({ ...formData, max_conversations: e.target.value })}
+                    placeholder="500"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_max_device_sessions">Máx. Sesiones de Dispositivo</Label>
+                  <Input
+                    id="edit_max_device_sessions"
+                    type="number"
+                    value={formData.max_device_sessions}
+                    onChange={(e) => setFormData({ ...formData, max_device_sessions: e.target.value })}
+                    placeholder="3"
+                  />
+                </div>
               </div>
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>

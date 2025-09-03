@@ -104,7 +104,7 @@ const App = () => (
                 <AdminUsers />
               </ProtectedRoute>
             } />
-            <Route path="/admin/planes-pago" element={
+            <Route path="/admin/planes" element={
               <ProtectedRoute requireSuperAdmin>
                 <AdminPaymentPlans />
               </ProtectedRoute>
