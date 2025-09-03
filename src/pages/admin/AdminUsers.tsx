@@ -19,7 +19,9 @@ import {
   Building,
   Calendar,
   Shield,
-  User
+  User,
+  LogIn,
+  Key
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -50,6 +52,9 @@ const AdminUsers = () => {
     company_name: '',
     profile_type: 'cliente' as ProfileType
   });
+  const [newPassword, setNewPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [changingEmail, setChangingEmail] = useState(false);
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
   const { toast } = useToast();
@@ -189,6 +194,7 @@ const AdminUsers = () => {
     try {
       setUpdating(true);
 
+      // Update profile data
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -209,6 +215,7 @@ const AdminUsers = () => {
 
       setIsEditDialogOpen(false);
       setSelectedUser(null);
+      setNewPassword('');
       fetchUsers();
     } catch (error: any) {
       console.error('Error updating user:', error);
@@ -219,6 +226,102 @@ const AdminUsers = () => {
       });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleChangeEmail = async () => {
+    if (!selectedUser || !formData.email) return;
+
+    try {
+      setChangingEmail(true);
+
+      // Update email using admin API
+      const { error } = await supabase.auth.admin.updateUserById(
+        selectedUser.id,
+        { email: formData.email }
+      );
+
+      if (error) throw error;
+
+      toast({
+        title: "Email actualizado",
+        description: "El email del usuario ha sido cambiado exitosamente",
+      });
+
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error changing email:', error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo cambiar el email",
+        variant: "destructive",
+      });
+    } finally {
+      setChangingEmail(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!selectedUser || !newPassword) return;
+
+    try {
+      setChangingPassword(true);
+
+      // Update password using admin API
+      const { error } = await supabase.auth.admin.updateUserById(
+        selectedUser.id,
+        { password: newPassword }
+      );
+
+      if (error) throw error;
+
+      toast({
+        title: "Contraseña actualizada",
+        description: "La contraseña del usuario ha sido cambiada exitosamente",
+      });
+
+      setNewPassword('');
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo cambiar la contraseña",
+        variant: "destructive",
+      });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const handleQuickLogin = async (userId: string) => {
+    try {
+      // Sign out current user first
+      await supabase.auth.signOut();
+      
+      // Get user data for impersonation
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+      
+      if (userError) throw userError;
+      
+      if (userData.user) {
+        // Create a session for the target user
+        const { error: signInError } = await supabase.auth.admin.generateLink({
+          type: 'magiclink',
+          email: userData.user.email!,
+        });
+        
+        if (signInError) throw signInError;
+        
+        // Redirect to client dashboard
+        window.location.href = '/';
+      }
+    } catch (error: any) {
+      console.error('Error with quick login:', error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo acceder al panel del usuario",
+        variant: "destructive",
+      });
     }
   };
 
@@ -477,6 +580,16 @@ const AdminUsers = () => {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center space-x-2">
+                          {user.profile_type === 'cliente' && (
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleQuickLogin(user.id)}
+                              title="Acceder al panel del usuario"
+                            >
+                              <LogIn className="h-3 w-3" />
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
@@ -522,67 +635,129 @@ const AdminUsers = () => {
 
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Editar Usuario</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit_first_name">Nombre</Label>
-                  <Input
-                    id="edit_first_name"
-                    value={formData.first_name}
-                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                    placeholder="Nombre"
-                  />
+            <div className="space-y-6">
+              {/* Authentication Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium flex items-center">
+                  <Key className="mr-2 h-4 w-4" />
+                  Autenticación
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="edit_email">Email</Label>
+                    <div className="flex space-x-2">
+                      <Input
+                        id="edit_email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="usuario@ejemplo.com"
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleChangeEmail}
+                        disabled={changingEmail || !formData.email}
+                      >
+                        {changingEmail ? "Cambiando..." : "Cambiar"}
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_password">Nueva Contraseña</Label>
+                    <div className="flex space-x-2">
+                      <Input
+                        id="edit_password"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Nueva contraseña"
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleChangePassword}
+                        disabled={changingPassword || !newPassword}
+                      >
+                        {changingPassword ? "Cambiando..." : "Cambiar"}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="edit_last_name">Apellido</Label>
-                  <Input
-                    id="edit_last_name"
-                    value={formData.last_name}
-                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                    placeholder="Apellido"
-                  />
+              </div>
+
+              {/* Profile Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium flex items-center">
+                  <User className="mr-2 h-4 w-4" />
+                  Información del Perfil
+                </h3>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit_first_name">Nombre</Label>
+                      <Input
+                        id="edit_first_name"
+                        value={formData.first_name}
+                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                        placeholder="Nombre"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_last_name">Apellido</Label>
+                      <Input
+                        id="edit_last_name"
+                        value={formData.last_name}
+                        onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                        placeholder="Apellido"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_phone">Teléfono</Label>
+                    <Input
+                      id="edit_phone"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="Número de teléfono"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_company_name">Empresa</Label>
+                    <Input
+                      id="edit_company_name"
+                      value={formData.company_name}
+                      onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                      placeholder="Nombre de la empresa"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_profile_type">Tipo de Perfil</Label>
+                    <Select value={formData.profile_type} onValueChange={(value: ProfileType) => setFormData({ ...formData, profile_type: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cliente">Cliente</SelectItem>
+                        <SelectItem value="superadmin">Super Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-              <div>
-                <Label htmlFor="edit_phone">Teléfono</Label>
-                <Input
-                  id="edit_phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="Número de teléfono"
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit_company_name">Empresa</Label>
-                <Input
-                  id="edit_company_name"
-                  value={formData.company_name}
-                  onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                  placeholder="Nombre de la empresa"
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit_profile_type">Tipo de Perfil</Label>
-                <Select value={formData.profile_type} onValueChange={(value: ProfileType) => setFormData({ ...formData, profile_type: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cliente">Cliente</SelectItem>
-                    <SelectItem value="superadmin">Super Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                   Cancelar
                 </Button>
                 <Button onClick={handleUpdateUser} disabled={updating}>
-                  {updating ? "Actualizando..." : "Actualizar"}
+                  {updating ? "Actualizando..." : "Actualizar Perfil"}
                 </Button>
               </div>
             </div>
