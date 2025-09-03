@@ -81,8 +81,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     {
       icon: Calendar,
       label: 'Suscripciones',
-      href: '/admin/suscripciones',
-      active: location.pathname === '/admin/suscripciones'
+      href: '/admin/gestion-suscripciones',
+      active: location.pathname === '/admin/gestion-suscripciones'
     }
   ];
 
