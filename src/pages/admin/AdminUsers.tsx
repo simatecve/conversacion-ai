@@ -293,33 +293,16 @@ const AdminUsers = () => {
     }
   };
 
-  const handleQuickLogin = async (userId: string) => {
+  const handleQuickLogin = (userId: string) => {
     try {
-      // Sign out current user first
-      await supabase.auth.signOut();
-      
-      // Get user data for impersonation
-      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
-      
-      if (userError) throw userError;
-      
-      if (userData.user) {
-        // Create a session for the target user
-        const { error: signInError } = await supabase.auth.admin.generateLink({
-          type: 'magiclink',
-          email: userData.user.email!,
-        });
-        
-        if (signInError) throw signInError;
-        
-        // Redirect to client dashboard
-        window.location.href = '/';
-      }
+      // Simple redirect to dashboard with user ID as parameter
+      // This allows super admin to view user's panel directly
+      window.location.href = `/?impersonate=${userId}`;
     } catch (error: any) {
       console.error('Error with quick login:', error);
       toast({
         title: "Error",
-        description: error.message || "No se pudo acceder al panel del usuario",
+        description: "No se pudo acceder al panel del usuario",
         variant: "destructive",
       });
     }
