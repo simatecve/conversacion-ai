@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Trash2, Edit, Plus, Users, Calendar } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import AppLayout from '@/components/layout/AppLayout';
+
 import type { Tables } from '@/integrations/supabase/types';
 
 type ContactList = Tables<'contact_lists'>;
@@ -222,20 +222,17 @@ const ContactLists = () => {
 
   if (loading) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Cargando listas de contactos...</p>
           </div>
         </div>
-      </AppLayout>
     );
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Listas de Contactos</h1>
@@ -410,7 +407,6 @@ const ContactLists = () => {
         </DialogContent>
       </Dialog>
       </div>
-    </AppLayout>
   );
 };
 

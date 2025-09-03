@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Plus, Edit, Trash2, Phone, Mail, User, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import AppLayout from '@/components/layout/AppLayout';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Contact = Tables<'contacts'>;
@@ -360,20 +359,17 @@ const Contacts = () => {
 
   if (loading) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Cargando contactos...</p>
           </div>
         </div>
-      </AppLayout>
     );
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center mb-6">
           <Button
@@ -660,7 +656,6 @@ const Contacts = () => {
         </DialogContent>
       </Dialog>
       </div>
-    </AppLayout>
   );
 };
 

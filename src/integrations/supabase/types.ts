@@ -41,6 +41,82 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_subscriptions: {
+        Row: {
+          amount: number
+          auto_renew: boolean
+          billing_cycle: string
+          created_at: string
+          currency: string
+          end_date: string | null
+          id: string
+          notes: string | null
+          payment_method_id: string | null
+          plan_id: string
+          start_date: string
+          status: string
+          trial_end_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          auto_renew?: boolean
+          billing_cycle?: string
+          created_at?: string
+          currency?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          payment_method_id?: string | null
+          plan_id: string
+          start_date: string
+          status?: string
+          trial_end_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          auto_renew?: boolean
+          billing_cycle?: string
+          created_at?: string
+          currency?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          payment_method_id?: string | null
+          plan_id?: string
+          start_date?: string
+          status?: string
+          trial_end_date?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_subscriptions_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_api_keys: {
         Row: {
           api_key: string

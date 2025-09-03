@@ -11,7 +11,6 @@ import { Bot, Save, X, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import AppLayout from '@/components/layout/AppLayout';
 
 interface WhatsAppConnection {
   id: string;
@@ -143,20 +142,17 @@ const CreateAIAgent = () => {
 
   if (loading) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <Bot className="h-12 w-12 mx-auto mb-4 text-muted-foreground animate-pulse" />
             <p className="text-muted-foreground">Cargando...</p>
           </div>
         </div>
-      </AppLayout>
     );
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex items-center space-x-3 mb-6">
           <Button variant="ghost" size="sm" onClick={handleCancel}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -292,7 +288,6 @@ const CreateAIAgent = () => {
         </Card>
         </div>
       </div>
-    </AppLayout>
   );
 };
 

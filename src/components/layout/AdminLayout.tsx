@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import logo2 from '@/assets/logo2.png';
 import { useNavigate, useLocation } from 'react-router-dom';
+import packageJson from '../../../package.json';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -174,10 +175,13 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 </p>
               </div>
             </div>
+            <div className="text-xs text-muted-foreground text-center mt-3 mb-3">
+              Versión {packageJson.version}
+            </div>
             <Button
               variant="outline"
               size="sm"
-              className="w-full mt-3 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent"
+              className="w-full border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent"
               onClick={handleSignOut}
             >
               <LogOut className="mr-2 h-4 w-4" />

@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2, MoreVertical, Building, Mail, Phone, DollarSign, Users, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import AppLayout from '@/components/layout/AppLayout';
+
 import type { Tables } from '@/integrations/supabase/types';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
@@ -554,29 +554,26 @@ const Leads = () => {
 
   if (loading) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Cargando...</div>
-        </div>
-      </AppLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Cargando...</div>
+      </div>
     );
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
-            <p className="text-muted-foreground">
-              Gestiona tus leads en un tablero Kanban
-            </p>
-          </div>
-          <Button onClick={openCreateColumnDialog}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Columna
-          </Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
+          <p className="text-muted-foreground">
+            Gestiona tus leads en un tablero Kanban
+          </p>
         </div>
+        <Button onClick={openCreateColumnDialog}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nueva Columna
+        </Button>
+      </div>
 
         {/* Search Filter */}
         <div className="flex items-center space-x-2 bg-white p-4 rounded-lg border">
@@ -796,8 +793,7 @@ const Leads = () => {
           onClose={closeMessageTriggersDialog}
           column={selectedColumnForTriggers}
         />
-      </div>
-    </AppLayout>
+    </div>
   );
 };
 

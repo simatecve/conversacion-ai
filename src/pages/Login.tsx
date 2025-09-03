@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useToast } from '@/hooks/use-toast';
 import logo2 from '@/assets/logo2.png';
+import packageJson from '../../package.json';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -113,6 +114,11 @@ const Login = () => {
               {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </form>
+          <div className="text-center mt-6 pt-4 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              Versión {packageJson.version}
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

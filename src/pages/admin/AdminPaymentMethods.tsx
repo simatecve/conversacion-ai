@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,7 +55,56 @@ const AdminPaymentMethods = () => {
 
   useEffect(() => {
     fetchMethods();
+    // Crear métodos de pago por defecto si no existen
+    createDefaultPaymentMethods();
   }, []);
+
+  const createDefaultPaymentMethods = async () => {
+    try {
+      // Verificar si ya existen métodos de pago
+      const { data: existing } = await supabase
+        .from('payment_methods')
+        .select('id')
+        .limit(1);
+
+      if (existing && existing.length === 0) {
+        // Crear métodos de pago por defecto
+        const defaultMethods = [
+          {
+            name: 'Stripe',
+            provider: 'stripe',
+            api_key: '',
+            secret_key: '',
+            supported_currencies: ['USD', 'EUR', 'ARS'],
+            configuration: {
+              webhook_secret: '',
+              environment: 'test'
+            },
+            is_active: false
+          },
+          {
+            name: 'Mercado Pago Argentina',
+            provider: 'mercadopago',
+            api_key: '',
+            secret_key: '',
+            supported_currencies: ['ARS', 'USD'],
+            configuration: {
+              webhook_secret: '',
+              environment: 'sandbox',
+              country: 'AR'
+            },
+            is_active: false
+          }
+        ];
+
+        await supabase
+          .from('payment_methods')
+          .upsert(defaultMethods, { onConflict: 'provider' });
+      }
+    } catch (error) {
+      console.log('Los métodos de pago por defecto ya existen o hay un error:', error);
+    }
+  };
 
   const fetchMethods = async () => {
     try {
@@ -81,11 +129,55 @@ const AdminPaymentMethods = () => {
     }
   };
 
+  const validateApiKeys = (provider: string, apiKey: string, secretKey: string): string[] => {
+    const errors: string[] = [];
+    
+    if (!apiKey.trim()) {
+      errors.push('La clave API es requerida');
+    }
+    
+    if (!secretKey.trim()) {
+      errors.push('La clave secreta es requerida');
+    }
+    
+    switch (provider.toLowerCase()) {
+      case 'stripe':
+        if (apiKey && !apiKey.startsWith('pk_')) {
+          errors.push('La clave pública de Stripe debe comenzar con "pk_"');
+        }
+        if (secretKey && !secretKey.startsWith('sk_')) {
+          errors.push('La clave secreta de Stripe debe comenzar con "sk_"');
+        }
+        break;
+      case 'mercadopago':
+        if (apiKey && !apiKey.startsWith('APP_USR-')) {
+          errors.push('La clave pública de Mercado Pago debe comenzar con "APP_USR-"');
+        }
+        if (secretKey && !secretKey.startsWith('APP_USR-')) {
+          errors.push('El access token de Mercado Pago debe comenzar con "APP_USR-"');
+        }
+        break;
+    }
+    
+    return errors;
+  };
+
   const handleCreateMethod = async () => {
     if (!formData.name || !formData.provider) {
       toast({
         title: "Error",
         description: "Nombre y proveedor son requeridos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar claves de API
+    const validationErrors = validateApiKeys(formData.provider, formData.api_key, formData.secret_key);
+    if (validationErrors.length > 0) {
+      toast({
+        title: "Error de validación",
+        description: validationErrors.join('. '),
         variant: "destructive",
       });
       return;
@@ -135,6 +227,26 @@ const AdminPaymentMethods = () => {
 
   const handleUpdateMethod = async () => {
     if (!selectedMethod) return;
+
+    if (!formData.name || !formData.provider) {
+      toast({
+        title: "Error",
+        description: "Nombre y proveedor son requeridos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar claves de API
+    const validationErrors = validateApiKeys(formData.provider, formData.api_key, formData.secret_key);
+    if (validationErrors.length > 0) {
+      toast({
+        title: "Error de validación",
+        description: validationErrors.join('. '),
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       setUpdating(true);
@@ -256,20 +368,17 @@ const AdminPaymentMethods = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Cargando métodos de pago...</p>
           </div>
         </div>
-      </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -303,12 +412,18 @@ const AdminPaymentMethods = () => {
                   </div>
                   <div>
                     <Label htmlFor="provider">Proveedor *</Label>
-                    <Input
+                    <select
                       id="provider"
                       value={formData.provider}
                       onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
-                      placeholder="stripe"
-                    />
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Seleccionar proveedor</option>
+                      <option value="stripe">Stripe</option>
+                      <option value="mercadopago">Mercado Pago Argentina</option>
+                      <option value="paypal">PayPal</option>
+                      <option value="other">Otro</option>
+                    </select>
                   </div>
                 </div>
                 <div>
@@ -321,28 +436,109 @@ const AdminPaymentMethods = () => {
                     rows={2}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="api_key">API Key</Label>
-                    <Input
-                      id="api_key"
-                      type="password"
-                      value={formData.api_key}
-                      onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-                      placeholder="pk_test_..."
-                    />
+                {/* Campos específicos según el proveedor */}
+                {formData.provider.toLowerCase() === 'stripe' && (
+                  <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
+                    <h4 className="font-medium text-blue-900">Configuración de Stripe</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="stripe_public_key">Publishable Key *</Label>
+                        <Input
+                          id="stripe_public_key"
+                          type="password"
+                          value={formData.api_key}
+                          onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
+                          placeholder="pk_test_... o pk_live_..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Clave pública para el frontend</p>
+                      </div>
+                      <div>
+                        <Label htmlFor="stripe_secret_key">Secret Key *</Label>
+                        <Input
+                          id="stripe_secret_key"
+                          type="password"
+                          value={formData.secret_key}
+                          onChange={(e) => setFormData({ ...formData, secret_key: e.target.value })}
+                          placeholder="sk_test_... o sk_live_..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Clave secreta para el backend</p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="stripe_webhook_secret">Webhook Secret (Opcional)</Label>
+                      <Input
+                        id="stripe_webhook_secret"
+                        type="password"
+                        placeholder="whsec_..."
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Para verificar webhooks de Stripe</p>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="secret_key">Secret Key</Label>
-                    <Input
-                      id="secret_key"
-                      type="password"
-                      value={formData.secret_key}
-                      onChange={(e) => setFormData({ ...formData, secret_key: e.target.value })}
-                      placeholder="sk_test_..."
-                    />
+                )}
+                
+                {formData.provider.toLowerCase() === 'mercadopago' && (
+                  <div className="space-y-4 p-4 bg-yellow-50 rounded-lg">
+                    <h4 className="font-medium text-yellow-900">Configuración de Mercado Pago</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="mp_public_key">Public Key *</Label>
+                        <Input
+                          id="mp_public_key"
+                          type="password"
+                          value={formData.api_key}
+                          onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
+                          placeholder="APP_USR-..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Clave pública para el frontend</p>
+                      </div>
+                      <div>
+                        <Label htmlFor="mp_access_token">Access Token *</Label>
+                        <Input
+                          id="mp_access_token"
+                          type="password"
+                          value={formData.secret_key}
+                          onChange={(e) => setFormData({ ...formData, secret_key: e.target.value })}
+                          placeholder="APP_USR-..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Token de acceso para el backend</p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="mp_webhook_secret">Webhook Secret (Opcional)</Label>
+                      <Input
+                        id="mp_webhook_secret"
+                        type="password"
+                        placeholder="Secreto del webhook"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Para verificar webhooks de Mercado Pago</p>
+                    </div>
                   </div>
-                </div>
+                )}
+                
+                {!['stripe', 'mercadopago'].includes(formData.provider.toLowerCase()) && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="api_key">API Key</Label>
+                      <Input
+                        id="api_key"
+                        type="password"
+                        value={formData.api_key}
+                        onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
+                        placeholder="Clave de API"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="secret_key">Secret Key</Label>
+                      <Input
+                        id="secret_key"
+                        type="password"
+                        value={formData.secret_key}
+                        onChange={(e) => setFormData({ ...formData, secret_key: e.target.value })}
+                        placeholder="Clave secreta"
+                      />
+                    </div>
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="webhook_url">Webhook URL</Label>
                   <Input
@@ -644,7 +840,6 @@ const AdminPaymentMethods = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
   );
 };
 

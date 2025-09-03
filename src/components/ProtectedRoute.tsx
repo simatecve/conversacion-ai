@@ -2,6 +2,9 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import AppLayout from '@/components/layout/AppLayout';
+import AdminLayout from '@/components/layout/AdminLayout';
+import SuperAdminImpersonationLayout from '@/components/layout/SuperAdminImpersonationLayout';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,7 +13,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, requireSuperAdmin = false }: ProtectedRouteProps) => {
   const { user, loading: authLoading } = useAuth();
-  const { profile, loading: profileLoading, isSuperAdmin, isClient } = useProfile();
+  const { profile, loading: profileLoading, isSuperAdmin, isClient, isImpersonating } = useProfile();
   const location = useLocation();
 
   console.log('ProtectedRoute - user:', user?.email, 'loading:', authLoading, 'profile:', profile?.profile_type);
@@ -51,8 +54,8 @@ const ProtectedRoute = ({ children, requireSuperAdmin = false }: ProtectedRouteP
     return <Navigate to="/" replace />;
   }
 
-  // Redirect super admin to admin panel if trying to access regular routes
-  if (isSuperAdmin && !location.pathname.startsWith('/admin') && !requireSuperAdmin) {
+  // Redirect super admin to admin panel if trying to access regular routes (unless impersonating)
+  if (isSuperAdmin && !location.pathname.startsWith('/admin') && !requireSuperAdmin && !isImpersonating) {
     console.log('Super admin detected, redirecting to admin panel');
     return <Navigate to="/admin" replace />;
   }
@@ -63,7 +66,17 @@ const ProtectedRoute = ({ children, requireSuperAdmin = false }: ProtectedRouteP
     return <Navigate to="/" replace />;
   }
 
-  return <>{children}</>;
+  // Choose the appropriate layout based on user type and impersonation status
+  if (requireSuperAdmin) {
+    // Admin routes always use AdminLayout
+    return <AdminLayout>{children}</AdminLayout>;
+  } else if (isSuperAdmin && isImpersonating) {
+    // Super admin impersonating a user uses special layout
+    return <SuperAdminImpersonationLayout>{children}</SuperAdminImpersonationLayout>;
+  } else {
+    // Regular users and non-impersonating super admins use AppLayout
+    return <AppLayout>{children}</AppLayout>;
+  }
 };
 
 export default ProtectedRoute;

@@ -11,7 +11,6 @@ import { Send, Save, X, ArrowLeft, Upload, FileText, Image, Video, File } from '
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import AppLayout from '@/components/layout/AppLayout';
 import { Database } from '@/integrations/supabase/types';
 
 type ContactList = Database['public']['Tables']['contact_lists']['Row'];
@@ -285,20 +284,17 @@ const CreateCampaign = () => {
 
   if (loading) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Cargando...</p>
           </div>
         </div>
-      </AppLayout>
     );
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -570,7 +566,6 @@ const CreateCampaign = () => {
           </CardContent>
         </Card>
       </div>
-    </AppLayout>
   );
 };
 

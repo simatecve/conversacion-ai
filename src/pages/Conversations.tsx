@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import AppLayout from '@/components/layout/AppLayout';
 import ConversationList from '@/components/conversations/ConversationList';
 import ChatArea from '@/components/conversations/ChatArea';
 import { useConversations, useMessages, useSearchConversations } from '@/hooks/useConversations';
@@ -50,26 +49,24 @@ const Conversations = () => {
   };
 
   return (
-    <AppLayout>
-      <div className="flex h-full bg-background">
-        <ConversationList
-          conversations={displayConversations}
-          selectedConversation={selectedConversation}
-          onSelectConversation={handleSelectConversation}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          isLoading={isLoading}
-          unreadCount={unreadCount}
-        />
-        
-        <ChatArea
-          conversation={selectedConversation}
-          messages={messages}
-          onSendMessage={handleSendMessage}
-          isSending={isSending}
-        />
-      </div>
-    </AppLayout>
+    <div className="flex h-full bg-background">
+      <ConversationList
+        conversations={displayConversations}
+        selectedConversation={selectedConversation}
+        onSelectConversation={handleSelectConversation}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        isLoading={isLoading}
+        unreadCount={unreadCount}
+      />
+      
+      <ChatArea
+        conversation={selectedConversation}
+        messages={messages}
+        onSendMessage={handleSendMessage}
+        isSending={isSending}
+      />
+    </div>
   );
 };
 

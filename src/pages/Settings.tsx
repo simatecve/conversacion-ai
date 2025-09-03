@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
-import AppLayout from '@/components/layout/AppLayout';
+
 import Integrations from '@/components/Integrations';
 import { User, Lock, Phone, Building, Mail, Save, Eye, EyeOff, Settings as SettingsIcon, Key } from 'lucide-react';
 
@@ -165,27 +165,24 @@ const Settings = () => {
 
   if (loading) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Cargando configuración...</p>
-          </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando configuración...</p>
         </div>
-      </AppLayout>
+      </div>
     );
   }
 
   return (
-    <AppLayout>
-      <div className="container mx-auto py-6 space-y-6">
-        <div className="flex items-center space-x-2">
-          <SettingsIcon className="h-6 w-6 text-primary" />
-          <h1 className="text-3xl font-bold">Configuración</h1>
-        </div>
-        
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex items-center space-x-2">
+        <SettingsIcon className="h-6 w-6 text-primary" />
+        <h1 className="text-3xl font-bold">Configuración</h1>
+      </div>
+      
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="profile" className="flex items-center space-x-2">
               <User className="h-4 w-4" />
               <span>Perfil</span>
@@ -394,8 +391,7 @@ const Settings = () => {
             <Integrations />
           </TabsContent>
         </Tabs>
-      </div>
-    </AppLayout>
+    </div>
   );
 };
 
