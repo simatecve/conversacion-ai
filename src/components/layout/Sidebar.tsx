@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useConversations } from '@/hooks/useConversations';
 import logo2 from '@/assets/logo2.png';
 
 interface SidebarItem {
@@ -29,48 +30,55 @@ interface SidebarGroup {
   items: SidebarItem[];
 }
 
-const sidebarGroups: SidebarGroup[] = [
-  {
-    label: 'Principal',
-    items: [
-      { label: 'Panel Principal', icon: LayoutDashboard, href: '/' },
-    ]
-  },
-  {
-    label: 'Comunicaciones',
-    items: [
-      { label: 'Conexiones WhatsApp', icon: Phone, href: '/conexiones' },
-      { label: 'Conversaciones', icon: MessageSquare, href: '/conversaciones', badge: 3 },
-      { label: 'Campañas Masivas', icon: Send, href: '/campanas-masivas' },
-    ]
-  },
-  {
-    label: 'Gestión',
-    items: [
-      { label: 'Leads', icon: UserPlus, href: '/leads', badge: 12 },
-      { label: 'Listas de Contactos', icon: Users, href: '/listas-contactos' },
-      { label: 'Asistente IA', icon: Bot, href: '/asistente-ia' },
-      { label: 'Calendario', icon: Calendar, href: '/calendario' },
-    ]
-  },
-  {
-    label: 'Análisis',
-    items: [
-      { label: 'Reportes', icon: BarChart3, href: '/reportes' },
-    ]
-  },
-  {
-    label: 'Sistema',
-    items: [
-      { label: 'Configuración', icon: Settings, href: '/configuracion' },
-    ]
-  }
-];
-
 export const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { user } = useAuth();
+  const { unreadCount } = useConversations();
+
+  // Crear grupos de sidebar dinámicamente con el contador de conversaciones
+  const sidebarGroups: SidebarGroup[] = [
+    {
+      label: 'Principal',
+      items: [
+        { label: 'Panel Principal', icon: LayoutDashboard, href: '/' },
+      ]
+    },
+    {
+      label: 'Comunicaciones',
+      items: [
+        { label: 'Conexiones WhatsApp', icon: Phone, href: '/conexiones' },
+        { 
+          label: 'Conversaciones', 
+          icon: MessageSquare, 
+          href: '/conversaciones', 
+          badge: unreadCount > 0 ? unreadCount : undefined 
+        },
+        { label: 'Campañas Masivas', icon: Send, href: '/campanas-masivas' },
+      ]
+    },
+    {
+      label: 'Gestión',
+      items: [
+        { label: 'Leads', icon: UserPlus, href: '/leads' },
+        { label: 'Listas de Contactos', icon: Users, href: '/listas-contactos' },
+        { label: 'Asistente IA', icon: Bot, href: '/asistente-ia' },
+        { label: 'Calendario', icon: Calendar, href: '/calendario' },
+      ]
+    },
+    {
+      label: 'Análisis',
+      items: [
+        { label: 'Reportes', icon: BarChart3, href: '/reportes' },
+      ]
+    },
+    {
+      label: 'Sistema',
+      items: [
+        { label: 'Configuración', icon: Settings, href: '/configuracion' },
+      ]
+    }
+  ];
 
   return (
     <>

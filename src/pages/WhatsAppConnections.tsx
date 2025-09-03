@@ -59,6 +59,7 @@ const WhatsAppConnections = () => {
       const { data, error } = await supabase
         .from('whatsapp_connections')
         .select('*')
+        .eq('user_id', effectiveUserId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -125,53 +126,68 @@ const WhatsAppConnections = () => {
     }
 
     try {
-      // Ejecutar webhook de verificación de estado
-      const response = await fetch('https://n8n.kanbanpro.com.ar/webhook/qr_instancia', {
+      console.log('Verificando estatus para:', currentSession);
+      
+      // Usar el mismo webhook que handleVerifyStatus
+      const response = await fetch('https://n8n.kanbanpro.com.ar/webhook/estatus', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          session_name: currentSession,
-          action: 'verify_connection'
+          session_name: currentSession
         })
       });
-
+  
       if (!response.ok) {
-        throw new Error(`Error en webhook de verificación: ${response.status} ${response.statusText}`);
+        throw new Error(`Error del webhook: ${response.status}`);
       }
-
-      const verificationResult = await response.json();
-      console.log('Resultado de verificación:', verificationResult);
-
-      // Actualizar el estado de la conexión en la base de datos según la respuesta del webhook
-      if (verificationResult.status) {
-        const { error: updateError } = await supabase
-          .from('whatsapp_connections')
-          .update({ status: verificationResult.status })
-          .eq('name', currentSession)
-          .eq('user_id', user?.id);
-
-        if (updateError) {
-          console.error('Error actualizando estado:', updateError);
-          toast({
-            title: "Advertencia",
-            description: "Conexión verificada pero no se pudo actualizar el estado en la base de datos.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "¡Conexión verificada!",
-            description: `Estado actualizado: ${verificationResult.status}`,
-          });
+  
+      // Obtener respuesta como texto primero
+      const responseText = await response.text();
+      console.log('Respuesta del webhook (texto):', responseText);
+      
+      let newStatus = 'desconectado';
+      
+      try {
+        // Intentar parsear como JSON
+        const webhookData = JSON.parse(responseText);
+        console.log('Datos parseados como JSON:', webhookData);
+        
+        // Si es un array con objetos
+        if (Array.isArray(webhookData) && webhookData.length > 0) {
+          const connectionData = webhookData[0];
+          if (connectionData.status === 'WORKING') {
+            newStatus = 'conectado';
+          }
         }
-      } else {
-        toast({
-          title: "Verificación completada",
-          description: "La conexión ha sido procesada.",
-        });
+      } catch (jsonError) {
+        // Si no es JSON válido, verificar si el texto contiene WORKING
+        console.log('No es JSON, verificando texto plano:', responseText);
+        if (responseText.trim().toUpperCase() === 'WORKING') {
+          newStatus = 'conectado';
+        }
       }
-
+      
+      console.log('Actualizando estatus a:', newStatus);
+      
+      // Actualizar en la base de datos
+      const { error: updateError } = await supabase
+        .from('whatsapp_connections')
+        .update({ status: newStatus })
+        .eq('name', currentSession)
+        .eq('user_id', user?.id);
+  
+      if (updateError) {
+        console.error('Error actualizando BD:', updateError);
+        throw new Error('Error actualizando base de datos');
+      }
+      
+      toast({
+        title: "¡Conexión verificada!",
+        description: `Conexión ${newStatus}`,
+      });
+      
     } catch (error: any) {
       console.error('Error verificando conexión:', error);
       toast({
@@ -316,7 +332,8 @@ const WhatsAppConnections = () => {
       const { error } = await supabase
         .from('whatsapp_connections')
         .delete()
-        .eq('id', connectionId);
+        .eq('id', connectionId)
+        .eq('user_id', effectiveUserId);
 
       if (error) throw error;
 
@@ -391,7 +408,7 @@ const WhatsAppConnections = () => {
         .from('whatsapp_connections')
         .update({ status: newStatus })
         .eq('id', connectionId)
-        .eq('user_id', user?.id);
+        .eq('user_id', effectiveUserId);
   
       if (updateError) {
         console.error('Error actualizando BD:', updateError);

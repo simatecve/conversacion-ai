@@ -119,6 +119,20 @@ La aplicación incluye un sistema completo de gestión de conversaciones estilo 
 
 ## Cambios Recientes
 
+### v1.4.1 - Correcciones de Seguridad y Aislamiento de Datos
+- ✅ **Seguridad crítica**: Corregido problema donde usuarios podían ver datos de otros usuarios
+- ✅ **WhatsApp Connections**: Agregados filtros `user_id` en `fetchConnections()`, `handleDelete()` y `handleVerifyStatus()`
+- ✅ **Aislamiento completo**: Verificado que todos los componentes filtren correctamente por usuario:
+  - `Conversations.tsx` - Filtrado por instancias del usuario
+  - `Campaigns.tsx` - Filtrado por `user_id`
+  - `Contacts.tsx` - Filtrado por `user_id`
+  - `ContactLists.tsx` - Filtrado por `user_id`
+  - `ConversationService.ts` - Filtrado por instancias de WhatsApp del usuario
+  - `Leads.tsx` - Filtrado por `user_id` e instancias
+- ✅ **Protección de rutas admin**: Confirmado que páginas de administración requieren permisos de superadmin
+- ✅ **Row Level Security**: Políticas RLS activas y funcionando correctamente
+- ✅ **Consistencia**: Uso uniforme de `effectiveUserId` en todos los componentes
+
 ### v1.6.0 - Sistema de Conversaciones WhatsApp Web
 - ✅ **Nueva funcionalidad**: Sistema completo de gestión de conversaciones estilo WhatsApp Web
 - ✅ **Interfaz moderna**: Diseño que replica la experiencia de WhatsApp Web
