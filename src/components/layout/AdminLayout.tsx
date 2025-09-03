@@ -94,7 +94,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-background">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div 
@@ -107,83 +107,97 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
+        "fixed inset-y-0 left-0 z-50 w-64 bg-sidebar-background border-r border-sidebar-border transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+        {/* Logo section */}
+        <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
           <div className="flex items-center space-x-2">
             <img src={logo2} alt="Logo" className="h-8 w-8" />
-            <span className="text-xl font-bold text-gray-900">Admin Panel</span>
+            <span className="text-xl font-bold text-sidebar-foreground">Admin Panel</span>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="lg:hidden"
+            className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent"
             onClick={() => setSidebarOpen(false)}
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <nav className="mt-8 px-4">
-          <div className="space-y-2">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.href}
-                  onClick={() => {
-                    navigate(item.href);
-                    setSidebarOpen(false);
-                  }}
-                  className={cn(
-                    "w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors",
-                    item.active
-                      ? "bg-primary text-primary-foreground"
-                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                  )}
-                >
-                  <Icon className="mr-3 h-5 w-5" />
-                  {item.label}
-                </button>
-              );
-            })}
-          </div>
-        </nav>
+        {/* Navigation */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <div className="space-y-1">
+              <div className="px-3 py-2">
+                <h3 className="text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider">
+                  Administración
+                </h3>
+              </div>
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.href}
+                    onClick={() => {
+                      navigate(item.href);
+                      setSidebarOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group",
+                      item.active
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-primary"
+                    )}
+                  >
+                    <Icon className={cn(
+                      "mr-3 h-5 w-5 transition-colors",
+                      item.active
+                        ? "text-sidebar-primary-foreground"
+                        : "text-sidebar-foreground group-hover:text-sidebar-primary"
+                    )} />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
 
-        {/* User section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <Shield className="h-4 w-4 text-primary-foreground" />
+          {/* User section */}
+          <div className="p-4 border-t border-sidebar-border">
+            <div className="flex items-center space-x-3 p-3 rounded-lg bg-sidebar-accent">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
+                  <Shield className="h-4 w-4 text-white" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-sidebar-foreground truncate">
+                  Super Admin
+                </p>
+                <p className="text-xs text-sidebar-foreground/60 truncate">
+                  Panel de Administración
+                </p>
               </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                Super Admin
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                Panel de Administración
-              </p>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-3 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={handleSignOut}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Cerrar Sesión
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={handleSignOut}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Cerrar Sesión
-          </Button>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
-        {/* Top bar */}
-        <div className="sticky top-0 z-10 flex h-16 bg-white border-b border-gray-200 lg:hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top bar for mobile */}
+        <div className="sticky top-0 z-10 flex h-16 bg-card/50 backdrop-blur-sm border-b border-border lg:hidden">
           <Button
             variant="ghost"
             size="sm"
@@ -193,17 +207,13 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             <Menu className="h-6 w-6" />
           </Button>
           <div className="flex-1 flex items-center justify-center">
-            <h1 className="text-lg font-semibold text-gray-900">Admin Panel</h1>
+            <h1 className="text-lg font-semibold text-foreground">Admin Panel</h1>
           </div>
         </div>
 
         {/* Page content */}
-        <main className="flex-1">
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              {children}
-            </div>
-          </div>
+        <main className="flex-1 overflow-y-auto p-6">
+          {children}
         </main>
       </div>
     </div>
