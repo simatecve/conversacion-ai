@@ -124,19 +124,35 @@ const AdminUsers = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Create profile
+        // Wait a moment for the auth user to be fully created
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Create profile using upsert to handle RLS policies better
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert({
+          .upsert({
             id: authData.user.id,
             first_name: formData.first_name || null,
             last_name: formData.last_name || null,
             phone: formData.phone || null,
             company_name: formData.company_name || null,
-            profile_type: formData.profile_type
+            profile_type: formData.profile_type,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'id'
           });
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          // If profile creation fails, try to delete the auth user
+          try {
+            await supabase.auth.admin.deleteUser(authData.user.id);
+          } catch (deleteError) {
+            console.error('Failed to cleanup auth user:', deleteError);
+          }
+          throw profileError;
+        }
 
         toast({
           title: "Usuario creado",
