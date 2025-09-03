@@ -8,10 +8,9 @@ import {
   X,
   LogOut,
   BarChart3,
-  MessageSquare,
-  Phone,
   DollarSign,
-  Shield
+  Shield,
+  Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -80,16 +79,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       active: location.pathname === '/admin/estadisticas'
     },
     {
-      icon: MessageSquare,
-      label: 'Mensajes',
-      href: '/admin/mensajes',
-      active: location.pathname === '/admin/mensajes'
-    },
-    {
-      icon: Phone,
-      label: 'Conversaciones',
-      href: '/admin/conversaciones',
-      active: location.pathname === '/admin/conversaciones'
+      icon: Calendar,
+      label: 'Suscripciones',
+      href: '/admin/suscripciones',
+      active: location.pathname === '/admin/suscripciones'
     }
   ];
 
