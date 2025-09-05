@@ -46,7 +46,15 @@ export class ConversationService {
             created_at,
             direction,
             message_type,
-            is_bot
+            is_bot,
+            attachment_url,
+            conversation_id,
+            file_url,
+            instance_name,
+            pushname,
+            updated_at,
+            user_id,
+            whatsapp_number
           )
         `)
         .in('instance_name', instanceNames)
@@ -122,7 +130,15 @@ export class ConversationService {
             created_at,
             direction,
             message_type,
-            is_bot
+            is_bot,
+            attachment_url,
+            conversation_id,
+            file_url,
+            instance_name,
+            pushname,
+            updated_at,
+            user_id,
+            whatsapp_number
           )
         `)
         .in('instance_name', instanceNames)

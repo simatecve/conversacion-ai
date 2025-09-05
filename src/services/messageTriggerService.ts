@@ -102,7 +102,7 @@ export class MessageTriggerService {
   }
 
   // Obtener disparadores por condición
-  static async getTriggersByCondition(condition: TriggerCondition): Promise<MessageTrigger[]> {
+  static async getTriggersByCondition(condition: string): Promise<MessageTrigger[]> {
     const { data, error } = await supabase
       .from('column_message_triggers')
       .select('*')
@@ -119,7 +119,7 @@ export class MessageTriggerService {
   // Obtener disparadores activos por columna y condición
   static async getActiveTriggersByColumnAndCondition(
     columnId: string,
-    condition: TriggerCondition
+    condition: string
   ): Promise<MessageTrigger[]> {
     const { data, error } = await supabase
       .from('column_message_triggers')
