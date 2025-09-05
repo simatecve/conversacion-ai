@@ -23,15 +23,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Database } from '@/integrations/supabase/types';
 
 type Message = Database['public']['Tables']['messages']['Row'];
-type MessageDirection = Database['public']['Enums']['message_direction'];
-type MessageStatus = Database['public']['Enums']['message_status'];
 
 interface MessageWithDetails extends Message {
-  conversation?: {
-    contact_name?: string;
-    contact_phone?: string;
+  conversations?: {
+    whatsapp_number?: string;
+    pushname?: string;
   };
-  profile?: {
+  profiles?: {
     first_name?: string;
     last_name?: string;
   };
@@ -42,7 +40,6 @@ const AdminMessages = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [directionFilter, setDirectionFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalMessages, setTotalMessages] = useState(0);
@@ -51,7 +48,7 @@ const AdminMessages = () => {
 
   useEffect(() => {
     fetchMessages();
-  }, [currentPage, directionFilter, statusFilter, dateFilter]);
+  }, [currentPage, directionFilter, dateFilter, searchTerm]);
 
   const fetchMessages = async () => {
     try {
@@ -59,27 +56,13 @@ const AdminMessages = () => {
       
       let query = supabase
         .from('messages')
-        .select(`
-          *,
-          conversations!inner(
-            contact_name,
-            contact_phone
-          ),
-          profiles(
-            first_name,
-            last_name
-          )
-        `, { count: 'exact' })
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range((currentPage - 1) * messagesPerPage, currentPage * messagesPerPage - 1);
 
       // Apply filters
       if (directionFilter !== 'all') {
         query = query.eq('direction', directionFilter);
-      }
-      
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
       }
 
       if (dateFilter !== 'all') {
@@ -103,11 +86,48 @@ const AdminMessages = () => {
         query = query.gte('created_at', startDate.toISOString());
       }
 
+      if (searchTerm) {
+        query = query.or(`message.ilike.%${searchTerm}%,whatsapp_number.ilike.%${searchTerm}%,pushname.ilike.%${searchTerm}%`);
+      }
+
       const { data, error, count } = await query;
 
       if (error) throw error;
-      
-      setMessages(data || []);
+
+      // Enrich messages with conversation and profile data
+      const messagesWithDetails = await Promise.all(
+        (data || []).map(async (message) => {
+          // Get conversation data
+          let conversationData = null;
+          if (message.conversation_id) {
+            const { data: convData } = await supabase
+              .from('conversations')
+              .select('whatsapp_number, pushname')
+              .eq('id', message.conversation_id)
+              .single();
+            conversationData = convData;
+          }
+
+          // Get user profile if user_id exists
+          let userProfile = null;
+          if (message.user_id) {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('first_name, last_name')
+              .eq('id', message.user_id)
+              .single();
+            userProfile = profileData;
+          }
+
+          return {
+            ...message,
+            conversations: conversationData,
+            profiles: userProfile
+          };
+        })
+      );
+
+      setMessages(messagesWithDetails);
       setTotalMessages(count || 0);
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -121,59 +141,16 @@ const AdminMessages = () => {
     }
   };
 
-  const getStatusIcon = (status: MessageStatus) => {
-    switch (status) {
-      case 'sent':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'delivered':
-        return <CheckCircle className="h-4 w-4 text-blue-500" />;
-      case 'read':
-        return <CheckCircle className="h-4 w-4 text-blue-600" />;
-      case 'failed':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-400" />;
-    }
-  };
-
-  const getStatusBadge = (status: MessageStatus) => {
-    const variants: Record<MessageStatus, 'default' | 'secondary' | 'destructive'> = {
-      sent: 'default',
-      delivered: 'default',
-      read: 'default',
-      failed: 'destructive',
-      pending: 'secondary'
-    };
-    
-    return (
-      <Badge variant={variants[status]} className="text-xs">
-        {status === 'sent' && 'Enviado'}
-        {status === 'delivered' && 'Entregado'}
-        {status === 'read' && 'Leído'}
-        {status === 'failed' && 'Fallido'}
-        {status === 'pending' && 'Pendiente'}
-      </Badge>
-    );
-  };
-
-  const getDirectionIcon = (direction: MessageDirection) => {
-    return direction === 'outbound' ? (
-      <Send className="h-4 w-4 text-blue-500" />
-    ) : (
-      <Download className="h-4 w-4 text-green-500" />
-    );
-  };
-
   const filteredMessages = messages.filter(message => {
     if (!searchTerm) return true;
     
     const searchLower = searchTerm.toLowerCase();
     return (
-      message.content?.toLowerCase().includes(searchLower) ||
-      message.conversation?.contact_name?.toLowerCase().includes(searchLower) ||
-      message.conversation?.contact_phone?.includes(searchTerm) ||
-      message.profile?.first_name?.toLowerCase().includes(searchLower) ||
-      message.profile?.last_name?.toLowerCase().includes(searchLower)
+      message.message?.toLowerCase().includes(searchLower) ||
+      message.conversations?.whatsapp_number?.includes(searchTerm) ||
+      message.conversations?.pushname?.toLowerCase().includes(searchLower) ||
+      message.profiles?.first_name?.toLowerCase().includes(searchLower) ||
+      message.profiles?.last_name?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -186,214 +163,252 @@ const AdminMessages = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Cargando mensajes...</p>
           </div>
-        </div>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <MessageSquare className="mr-3 h-8 w-8" />
-              Mensajes del Sistema
-            </h1>
-            <p className="text-gray-600 mt-2">Monitorea todos los mensajes enviados y recibidos</p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Badge variant="secondary">
-              {totalMessages.toLocaleString()} mensajes
-            </Badge>
-          </div>
-        </div>
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold">Gestión de Mensajes</h1>
+        <p className="text-muted-foreground">
+          Administra todos los mensajes de WhatsApp del sistema
+        </p>
+      </div>
 
-        {/* Filters */}
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Filter className="mr-2 h-5 w-5" />
-              Filtros
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Mensajes</CardTitle>
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="text-2xl font-bold">{totalMessages}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Enviados</CardTitle>
+            <Send className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {messages.filter(m => m.direction === 'outgoing').length}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Recibidos</CardTitle>
+            <Download className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {messages.filter(m => m.direction === 'incoming').length}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Bot</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {messages.filter(m => m.is_bot).length}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filtros
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Buscar mensajes..."
+                  placeholder="Buscar mensaje, teléfono, contacto..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
-              <Select value={directionFilter} onValueChange={setDirectionFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Dirección" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las direcciones</SelectItem>
-                  <SelectItem value="inbound">Entrantes</SelectItem>
-                  <SelectItem value="outbound">Salientes</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="sent">Enviado</SelectItem>
-                  <SelectItem value="delivered">Entregado</SelectItem>
-                  <SelectItem value="read">Leído</SelectItem>
-                  <SelectItem value="failed">Fallido</SelectItem>
-                  <SelectItem value="pending">Pendiente</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Fecha" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las fechas</SelectItem>
-                  <SelectItem value="today">Hoy</SelectItem>
-                  <SelectItem value="week">Última semana</SelectItem>
-                  <SelectItem value="month">Este mes</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Messages Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Lista de Mensajes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Mensaje</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Contacto</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Usuario</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Dirección</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Estado</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Fecha</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredMessages.map((message) => (
-                    <tr key={message.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4">
-                        <div className="max-w-xs">
-                          <p className="text-sm text-gray-900 truncate">
-                            {message.content || 'Sin contenido'}
-                          </p>
-                          {message.media_url && (
-                            <Badge variant="outline" className="text-xs mt-1">
-                              Media
-                            </Badge>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4 text-gray-400" />
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {message.conversation?.contact_name || 'Sin nombre'}
-                            </div>
-                            <div className="text-xs text-gray-500 flex items-center">
-                              <Phone className="h-3 w-3 mr-1" />
-                              {message.conversation?.contact_phone || 'Sin teléfono'}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-900">
-                          {message.profile ? 
-                            `${message.profile.first_name || ''} ${message.profile.last_name || ''}`.trim() || 'Sin nombre' :
-                            'Sistema'
-                          }
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center space-x-2">
-                          {getDirectionIcon(message.direction)}
-                          <span className="text-sm capitalize">
-                            {message.direction === 'inbound' ? 'Entrante' : 'Saliente'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(message.status)}
-                          {getStatusBadge(message.status)}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          <div>
-                            <div>{new Date(message.created_at).toLocaleDateString()}</div>
-                            <div className="text-xs text-gray-500">
-                              {new Date(message.created_at).toLocaleTimeString()}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filteredMessages.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  No se encontraron mensajes
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">
-              Mostrando {((currentPage - 1) * messagesPerPage) + 1} a {Math.min(currentPage * messagesPerPage, totalMessages)} de {totalMessages} mensajes
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-              >
-                Anterior
-              </Button>
-              <span className="text-sm text-gray-600">
-                Página {currentPage} de {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-              >
-                Siguiente
-              </Button>
-            </div>
+            <Select value={directionFilter} onValueChange={setDirectionFilter}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Dirección" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="incoming">Entrantes</SelectItem>
+                <SelectItem value="outgoing">Salientes</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <Calendar className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filtrar por fecha" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las fechas</SelectItem>
+                <SelectItem value="today">Hoy</SelectItem>
+                <SelectItem value="week">Esta semana</SelectItem>
+                <SelectItem value="month">Este mes</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
+
+      {/* Messages Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Mensajes ({filteredMessages.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full table-auto">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Mensaje</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Contacto</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Usuario</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Dirección</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Tipo</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Fecha</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredMessages.map((message) => (
+                  <tr key={message.id} className="border-b hover:bg-gray-50">
+                    <td className="py-3 px-4">
+                      <div className="max-w-xs">
+                        <p className="text-sm text-gray-900 truncate">
+                          {message.message || 'Sin contenido'}
+                        </p>
+                        {message.attachment_url && (
+                          <Badge variant="outline" className="text-xs mt-1">
+                            Adjunto
+                          </Badge>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {message.conversations?.pushname || 'Sin nombre'}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {message.conversations?.whatsapp_number}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      {message.profiles && (
+                        <div className="text-sm text-gray-900">
+                          {message.profiles.first_name} {message.profiles.last_name}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge
+                        variant={message.direction === 'incoming' ? 'default' : 'secondary'}
+                      >
+                        {message.direction === 'incoming' ? 'Entrante' : 'Saliente'}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        {message.is_bot && (
+                          <Badge variant="outline" className="text-xs">
+                            Bot
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="text-xs">
+                          {message.message_type || 'text'}
+                        </Badge>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm text-gray-500">
+                          {new Date(message.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4 mr-1" />
+                        Ver
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-6">
+              <p className="text-sm text-gray-500">
+                Mostrando {(currentPage - 1) * messagesPerPage + 1} a{' '}
+                {Math.min(currentPage * messagesPerPage, totalMessages)} de{' '}
+                {totalMessages} mensajes
+              </p>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <span className="text-sm text-gray-500">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  Siguiente
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {filteredMessages.length === 0 && (
+            <div className="text-center py-12">
+              <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No se encontraron mensajes
+              </h3>
+              <p className="text-gray-500">
+                No hay mensajes que coincidan con los filtros aplicados.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
