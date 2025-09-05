@@ -176,7 +176,7 @@ const WhatsAppConnections = () => {
         .from('whatsapp_connections')
         .update({ status: newStatus })
         .eq('name', currentSession)
-        .eq('user_id', user?.id);
+        .eq('user_id', effectiveUserId);
   
       if (updateError) {
         console.error('Error actualizando BD:', updateError);
