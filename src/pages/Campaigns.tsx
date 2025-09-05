@@ -104,6 +104,19 @@ export function Campaigns() {
     setSendingCampaign(campaign.id);
     
     try {
+      // Cambiar el estado a 'sending' al iniciar el proceso
+      const { error: updateError } = await supabase
+        .from('mass_campaigns')
+        .update({ status: 'sending' })
+        .eq('id', campaign.id);
+
+      if (updateError) throw updateError;
+
+      // Actualizar la campaña en el estado local
+      setCampaigns(campaigns.map(c => 
+        c.id === campaign.id ? { ...c, status: 'sending' } : c
+      ));
+
       const response = await fetch('https://n8n.kanbanpro.com.ar/webhook/envio-masivo', {
         method: 'POST',
         headers: {
@@ -129,25 +142,25 @@ export function Campaigns() {
         throw new Error('Error en el envío');
       }
 
-      // Actualizar el estado de la campaña a 'sent'
-      const { error } = await supabase
-        .from('mass_campaigns')
-        .update({ status: 'sent' })
-        .eq('id', campaign.id);
-
-      if (error) throw error;
-
-      // Actualizar la campaña en el estado local
-      setCampaigns(campaigns.map(c => 
-        c.id === campaign.id ? { ...c, status: 'sent' } : c
-      ));
-
       toast({
         title: 'Éxito',
-        description: 'Campaña enviada correctamente',
+        description: 'Campaña iniciada correctamente. El estado se actualizará automáticamente.',
       });
     } catch (error) {
       console.error('Error sending campaign:', error);
+      
+      // Si hay error, revertir el estado a 'ready'
+      const { error: revertError } = await supabase
+        .from('mass_campaigns')
+        .update({ status: 'ready' })
+        .eq('id', campaign.id);
+
+      if (!revertError) {
+        setCampaigns(campaigns.map(c => 
+          c.id === campaign.id ? { ...c, status: 'ready' } : c
+        ));
+      }
+
       toast({
         title: 'Error',
         description: 'No se pudo enviar la campaña',
