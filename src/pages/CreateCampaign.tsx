@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,7 @@ import { Database } from '@/integrations/supabase/types';
 
 type ContactList = Database['public']['Tables']['contact_lists']['Row'];
 type WhatsAppConnection = Database['public']['Tables']['whatsapp_connections']['Row'];
+type Campaign = Database['public']['Tables']['mass_campaigns']['Row'];
 
 interface FormData {
   name: string;
@@ -32,6 +33,8 @@ interface FormData {
 
 const CreateCampaign = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditing = !!id;
   const [contactLists, setContactLists] = useState<ContactList[]>([]);
   const [whatsappConnections, setWhatsappConnections] = useState<WhatsAppConnection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,10 +60,13 @@ const CreateCampaign = () => {
   useEffect(() => {
     if (user) {
       loadData();
+      if (isEditing && id) {
+        loadCampaign(id);
+      }
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, id, isEditing]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -183,6 +189,52 @@ const CreateCampaign = () => {
         description: 'Error al cargar los datos',
         variant: 'destructive'
       });
+    }
+  };
+
+  const loadCampaign = async (campaignId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('mass_campaigns')
+        .select('*')
+        .eq('id', campaignId)
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) {
+        console.error('Error loading campaign:', error);
+        toast({
+          title: 'Error',
+          description: 'No se pudo cargar la campaña',
+          variant: 'destructive'
+        });
+        navigate('/campanas-masivas');
+        return;
+      }
+
+      if (data) {
+        setFormData({
+          name: data.name,
+          description: data.description || '',
+          whatsapp_connection_name: data.whatsapp_connection_name,
+          campaign_message: data.campaign_message,
+          edit_with_ai: data.edit_with_ai,
+          min_delay: data.min_delay,
+          max_delay: data.max_delay,
+          status: data.status as 'draft' | 'active' | 'paused' | 'completed',
+          attachment_urls: data.attachment_urls || [],
+          attachment_names: data.attachment_names || [],
+          contact_list_id: data.contact_list_id || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error loading campaign:', error);
+      toast({
+        title: 'Error',
+        description: 'Error al cargar la campaña',
+        variant: 'destructive'
+      });
+      navigate('/campanas-masivas');
     } finally {
       setLoading(false);
     }
@@ -233,44 +285,73 @@ const CreateCampaign = () => {
       // Subir archivos si hay alguno seleccionado
       const { urls, names } = await uploadFiles();
       
-      const { error } = await supabase
-        .from('mass_campaigns')
-        .insert({
-          user_id: user?.id,
-          name: formData.name.trim(),
-          description: formData.description.trim(),
-          whatsapp_connection_name: formData.whatsapp_connection_name,
-          campaign_message: formData.campaign_message.trim(),
-          edit_with_ai: formData.edit_with_ai,
-          min_delay: formData.min_delay,
-          max_delay: formData.max_delay,
-          status: formData.status,
-          attachment_urls: urls,
-          attachment_names: names,
-          contact_list_id: formData.contact_list_id
-        });
+      const campaignData = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        whatsapp_connection_name: formData.whatsapp_connection_name,
+        campaign_message: formData.campaign_message.trim(),
+        edit_with_ai: formData.edit_with_ai,
+        min_delay: formData.min_delay,
+        max_delay: formData.max_delay,
+        status: formData.status,
+        attachment_urls: urls.length > 0 ? urls : formData.attachment_urls,
+        attachment_names: names.length > 0 ? names : formData.attachment_names,
+        contact_list_id: formData.contact_list_id
+      };
 
-      if (error) {
-        console.error('Error creating campaign:', error);
+      if (isEditing && id) {
+        // Actualizar campaña existente
+        const { error } = await supabase
+          .from('mass_campaigns')
+          .update(campaignData)
+          .eq('id', id)
+          .eq('user_id', user?.id);
+
+        if (error) {
+          console.error('Error updating campaign:', error);
+          toast({
+            title: 'Error',
+            description: 'No se pudo actualizar la campaña',
+            variant: 'destructive'
+          });
+          return;
+        }
+
         toast({
-          title: 'Error',
-          description: 'No se pudo crear la campaña',
-          variant: 'destructive'
+          title: 'Éxito',
+          description: 'Campaña actualizada exitosamente'
         });
-        return;
-      }
+      } else {
+        // Crear nueva campaña
+        const { error } = await supabase
+          .from('mass_campaigns')
+          .insert({
+            user_id: user?.id,
+            ...campaignData
+          });
 
-      toast({
-        title: 'Éxito',
-        description: 'Campaña creada exitosamente'
-      });
+        if (error) {
+          console.error('Error creating campaign:', error);
+          toast({
+            title: 'Error',
+            description: 'No se pudo crear la campaña',
+            variant: 'destructive'
+          });
+          return;
+        }
+
+        toast({
+          title: 'Éxito',
+          description: 'Campaña creada exitosamente'
+        });
+      }
       
       navigate('/campanas-masivas');
     } catch (error) {
-      console.error('Error creating campaign:', error);
+      console.error('Error saving campaign:', error);
       toast({
         title: 'Error',
-        description: 'Error al crear la campaña',
+        description: `Error al ${isEditing ? 'actualizar' : 'crear'} la campaña`,
         variant: 'destructive'
       });
     } finally {
@@ -308,8 +389,12 @@ const CreateCampaign = () => {
               Volver
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Crear Nueva Campaña</h1>
-              <p className="text-muted-foreground">Configure los detalles de su campaña masiva</p>
+              <h1 className="text-2xl font-bold text-foreground">
+                {isEditing ? 'Editar Campaña' : 'Crear Nueva Campaña'}
+              </h1>
+              <p className="text-muted-foreground">
+                {isEditing ? 'Modifica los detalles de tu campaña' : 'Configure los detalles de su campaña masiva'}
+              </p>
             </div>
           </div>
         </div>
@@ -547,7 +632,7 @@ const CreateCampaign = () => {
                   {creating ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
-                      Creando...
+                      {isEditing ? 'Actualizando...' : 'Creando...'}
                     </>
                   ) : uploadingFiles ? (
                     <>
@@ -557,7 +642,7 @@ const CreateCampaign = () => {
                   ) : (
                     <>
                       <Save className="h-4 w-4 mr-2" />
-                      Crear Campaña
+                      {isEditing ? 'Actualizar Campaña' : 'Crear Campaña'}
                     </>
                   )}
                 </Button>

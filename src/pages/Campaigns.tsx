@@ -22,7 +22,6 @@ export function Campaigns() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sendingCampaign, setSendingCampaign] = useState<string | null>(null);
-  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
 
   useEffect(() => {
     if (effectiveUserId) {
@@ -305,7 +304,7 @@ export function Campaigns() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setEditingCampaign(campaign)}
+                      onClick={() => navigate(`/crear-campana/${campaign.id}`)}
                       className="flex-1 border-border hover:bg-accent"
                     >
                       <Edit className="h-4 w-4 mr-1" />

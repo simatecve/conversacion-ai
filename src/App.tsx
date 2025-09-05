@@ -79,6 +79,11 @@ const App = () => (
                 <CreateCampaign />
               </ProtectedRoute>
             } />
+            <Route path="/crear-campana/:id" element={
+              <ProtectedRoute>
+                <CreateCampaign />
+              </ProtectedRoute>
+            } />
             <Route path="/configuracion" element={
               <ProtectedRoute>
                 <Settings />
