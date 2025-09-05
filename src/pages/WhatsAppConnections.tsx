@@ -48,13 +48,23 @@ const WhatsAppConnections = () => {
   });
   const { toast } = useToast();
   const { user } = useAuth();
-  const { effectiveUserId } = useEffectiveUserId();
+  const { effectiveUserId, loading: userIdLoading } = useEffectiveUserId();
 
   useEffect(() => {
-    fetchConnections();
-  }, []);
+    // Solo ejecutar fetchConnections cuando tenemos un effectiveUserId válido
+    if (!userIdLoading && effectiveUserId) {
+      fetchConnections();
+    }
+  }, [effectiveUserId, userIdLoading]);
 
   const fetchConnections = async () => {
+    // Verificar que tengamos un effectiveUserId válido antes de hacer la consulta
+    if (!effectiveUserId) {
+      console.log('No effectiveUserId available, skipping fetch');
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('whatsapp_connections')
@@ -120,6 +130,15 @@ const WhatsAppConnections = () => {
       toast({
         title: "Error",
         description: "No hay sesión activa para verificar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!effectiveUserId) {
+      toast({
+        title: "Error",
+        description: "Usuario no autenticado",
         variant: "destructive",
       });
       return;
@@ -217,7 +236,7 @@ const WhatsAppConnections = () => {
       return;
     }
 
-    if (!user?.id) {
+    if (!user?.id || !effectiveUserId) {
       toast({
         title: "Error",
         description: "Usuario no autenticado",
@@ -327,6 +346,15 @@ const WhatsAppConnections = () => {
   };
 
   const handleDelete = async (connectionId: string, connectionName: string) => {
+    if (!effectiveUserId) {
+      toast({
+        title: "Error",
+        description: "Usuario no autenticado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setDeleting(connectionId);
     try {
       const { error } = await supabase
@@ -356,6 +384,15 @@ const WhatsAppConnections = () => {
   };
 
   const handleVerifyStatus = async (sessionName: string, connectionId: string) => {
+    if (!effectiveUserId) {
+      toast({
+        title: "Error",
+        description: "Usuario no autenticado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setVerifying(connectionId);
     
     try {
@@ -439,7 +476,7 @@ const WhatsAppConnections = () => {
     return colorOptions.find(opt => opt.value === colorValue) || colorOptions[0];
   };
 
-  if (loading) {
+  if (loading || userIdLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
