@@ -555,7 +555,6 @@ const AIAgents = () => {
                       <Switch
                         checked={agent.is_active}
                         onCheckedChange={() => toggleAgentStatus(agent)}
-                        size="sm"
                       />
                     </div>
                   </div>

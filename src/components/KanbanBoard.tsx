@@ -7,6 +7,7 @@ import { Plus, Edit, Trash2, MoreVertical, Building, Mail, Phone, DollarSign, Us
 import type { Tables } from '@/integrations/supabase/types';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { TriggerActivationService } from '@/services/triggerActivationService';
+import { useAuth } from '@/hooks/useAuth';
 
 type LeadColumn = Tables<'lead_columns'>;
 type Lead = Tables<'leads'>;
@@ -132,6 +133,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onConvertToContactList,
   onManageMessageTriggers
 }) => {
+  const { user } = useAuth();
+  
   const getLeadsByColumn = (columnId: string) => {
     return leads.filter(lead => lead.column_id === columnId);
   };

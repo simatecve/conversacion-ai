@@ -55,7 +55,7 @@ export const MessageTriggerModal: React.FC<MessageTriggerModalProps> = ({
 }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState<MessageTriggerFormData>(initialFormData);
-  const [errors, setErrors] = useState<Partial<MessageTriggerFormData>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof MessageTriggerFormData, string>>>({});
 
   const createMutation = useCreateMessageTrigger();
   const updateMutation = useUpdateMessageTrigger();
@@ -79,7 +79,7 @@ export const MessageTriggerModal: React.FC<MessageTriggerModalProps> = ({
   }, [mode, trigger, isOpen]);
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<MessageTriggerFormData> = {};
+    const newErrors: Partial<Record<keyof MessageTriggerFormData, string>> = {};
 
     if (!formData.message_title.trim()) {
       newErrors.message_title = 'El título es requerido';
@@ -89,7 +89,7 @@ export const MessageTriggerModal: React.FC<MessageTriggerModalProps> = ({
       newErrors.message_content = 'El contenido del mensaje es requerido';
     }
 
-    if (formData.delay_hours < 0) {
+    if (Number(formData.delay_hours) < 0) {
       newErrors.delay_hours = 'Las horas de retraso no pueden ser negativas';
     }
 
@@ -122,7 +122,9 @@ export const MessageTriggerModal: React.FC<MessageTriggerModalProps> = ({
   };
 
   const handleInputChange = (field: keyof MessageTriggerFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Ensure delay_hours is always a number
+    const processedValue = field === 'delay_hours' ? Number(value) : value;
+    setFormData(prev => ({ ...prev, [field]: processedValue }));
     // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
