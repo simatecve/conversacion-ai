@@ -241,6 +241,65 @@ export class ConversationService {
   }
 
   /**
+   * Envía un mensaje solo al webhook sin guardarlo en la base de datos
+   */
+  static async sendMessageToWebhookOnly(messageData: {
+    user_id: string;
+    conversation_id?: string;
+    whatsapp_number: string;
+    instance_name: string;
+    pushname?: string;
+    message?: string;
+    message_type?: string;
+    direction: string;
+    attachment_url?: string;
+    file_url?: string;
+    is_bot?: boolean;
+  }): Promise<void> {
+    try {
+      const webhookUrl = 'https://n8n.kanbanpro.com.ar/webhook/enviar-mensaje';
+      
+      // Generar ID único para el mensaje
+      const messageId = crypto.randomUUID();
+      const now = new Date().toISOString();
+      
+      const payload = {
+        id: messageId,
+        user_id: messageData.user_id,
+        conversation_id: messageData.conversation_id,
+        whatsapp_number: messageData.whatsapp_number,
+        instance_name: messageData.instance_name,
+        pushname: messageData.pushname,
+        message: messageData.message,
+        message_type: messageData.message_type || 'text',
+        direction: messageData.direction,
+        attachment_url: messageData.attachment_url,
+        file_url: messageData.file_url,
+        is_bot: messageData.is_bot || false,
+        created_at: now,
+        updated_at: now,
+      };
+
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Webhook response error: ${response.status}`);
+      }
+
+      console.log('Message sent to webhook successfully');
+    } catch (error) {
+      console.error('Error sending to webhook:', error);
+      throw error; // Lanzamos el error para que se maneje en el componente
+    }
+  }
+
+  /**
    * Envía mensaje al webhook de n8n
    */
   private static async sendToWebhook(messageData: Message): Promise<void> {

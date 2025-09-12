@@ -113,26 +113,20 @@ export const useMessages = (conversationId: string | null) => {
     staleTime: 10000,
   });
 
-  // Mutation para enviar mensaje
+  // Mutation para enviar mensaje solo al webhook
   const sendMessageMutation = useMutation({
-    mutationFn: ConversationService.sendMessage,
-    onSuccess: (newMessage) => {
-      if (newMessage && conversationId) {
-        // Agregar el nuevo mensaje a la cache
-        queryClient.setQueryData(
-          ['messages', conversationId],
-          (oldMessages: Message[] = []) => [...oldMessages, newMessage]
-        );
-        
-        // Invalidar conversaciones para actualizar último mensaje
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      }
+    mutationFn: ConversationService.sendMessageToWebhookOnly,
+    onSuccess: () => {
+      toast({
+        title: 'Mensaje enviado',
+        description: 'El mensaje se envió correctamente al webhook',
+      });
     },
     onError: (error) => {
-      console.error('Error sending message:', error);
+      console.error('Error sending message to webhook:', error);
       toast({
         title: 'Error',
-        description: 'No se pudo enviar el mensaje',
+        description: 'No se pudo enviar el mensaje al webhook',
         variant: 'destructive',
       });
     },
