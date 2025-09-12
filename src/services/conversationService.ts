@@ -245,7 +245,7 @@ export class ConversationService {
    */
   private static async sendToWebhook(messageData: Message): Promise<void> {
     try {
-      const webhookUrl = 'https://n8n.kanbanpro.com.ar/webhook/enviar_mensaje_crm';
+      const webhookUrl = 'https://n8n.kanbanpro.com.ar/webhook/enviar-mensaje';
       
       const payload = {
         id: messageData.id,
