@@ -10,6 +10,7 @@ import { AssignToKanban } from './AssignToKanban';
 import EmojiPicker from 'emoji-picker-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import AttachmentRenderer from './AttachmentRenderer';
 
 type Conversation = Database['public']['Tables']['conversations']['Row'];
 type Message = Database['public']['Tables']['messages']['Row'];
@@ -360,43 +361,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
       >
         {/* Contenido del mensaje */}
-        {message.attachment_url && (
-          <div className="mb-2">
-            {message.message_type === 'file' && (
-              <>
-                {message.attachment_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                  <img 
-                    src={message.attachment_url} 
-                    alt="Imagen adjunta"
-                    className="max-w-xs rounded-md cursor-pointer"
-                    onClick={() => window.open(message.attachment_url, '_blank')}
-                  />
-                ) : message.attachment_url.match(/\.(mp4|webm|ogg)$/i) ? (
-                  <video 
-                    src={message.attachment_url} 
-                    controls 
-                    className="max-w-xs rounded-md"
-                  />
-                ) : message.attachment_url.match(/\.(mp3|wav|ogg)$/i) ? (
-                  <audio 
-                    src={message.attachment_url} 
-                    controls 
-                    className="w-64"
-                  />
-                ) : (
-                  <a 
-                    href={message.attachment_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 p-2 bg-background/10 rounded-md hover:bg-background/20 transition-colors"
-                  >
-                    <Paperclip className="h-4 w-4" />
-                    <span className="text-sm">Archivo adjunto</span>
-                  </a>
-                )}
-              </>
-            )}
-          </div>
+        {(message.file_url || message.attachment_url) && (
+          <AttachmentRenderer 
+            attachmentUrl={message.file_url || message.attachment_url}
+            messageType={message.message_type}
+            isOutgoing={isOutgoing}
+          />
         )}
         
         <div className="whitespace-pre-wrap break-words">

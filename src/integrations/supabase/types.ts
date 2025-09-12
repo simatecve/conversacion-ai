@@ -622,6 +622,48 @@ export type Database = {
           },
         ]
       }
+      payment_methods: {
+        Row: {
+          api_key: string | null
+          configuration: Json | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          provider: string
+          secret_key: string | null
+          supported_currencies: string[] | null
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          configuration?: Json | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          provider: string
+          secret_key?: string | null
+          supported_currencies?: string[] | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          configuration?: Json | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          provider?: string
+          secret_key?: string | null
+          supported_currencies?: string[] | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company_name: string | null

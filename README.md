@@ -119,6 +119,12 @@ La aplicación incluye un sistema completo de gestión de conversaciones estilo 
 
 ## Cambios Recientes
 
+### v1.4.2 - Actualización de Métodos de Pago
+
+- Eliminadas las restricciones de formato para claves de API de Mercado Pago
+- Mejorada la flexibilidad en la configuración de métodos de pago
+- Actualizados placeholders para mayor claridad
+
 ### v1.4.1 - Correcciones de Seguridad y Aislamiento de Datos
 - ✅ **Seguridad crítica**: Corregido problema donde usuarios podían ver datos de otros usuarios
 - ✅ **WhatsApp Connections**: Agregados filtros `user_id` en `fetchConnections()`, `handleDelete()` y `handleVerifyStatus()`
