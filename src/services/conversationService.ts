@@ -228,10 +228,54 @@ export class ConversationService {
         );
       }
 
+      // Enviar al webhook de n8n
+      if (data) {
+        this.sendToWebhook(data);
+      }
+
       return data;
     } catch (error) {
       console.error('Error in sendMessage:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Envía mensaje al webhook de n8n
+   */
+  private static async sendToWebhook(messageData: Message): Promise<void> {
+    try {
+      const webhookUrl = 'https://n8n.kanbanpro.com.ar/webhook/enviar_mensaje_crm';
+      
+      const payload = {
+        id: messageData.id,
+        user_id: messageData.user_id,
+        conversation_id: messageData.conversation_id,
+        whatsapp_number: messageData.whatsapp_number,
+        instance_name: messageData.instance_name,
+        pushname: messageData.pushname,
+        message: messageData.message,
+        message_type: messageData.message_type,
+        direction: messageData.direction,
+        attachment_url: messageData.attachment_url,
+        file_url: messageData.file_url,
+        is_bot: messageData.is_bot,
+        created_at: messageData.created_at,
+        updated_at: messageData.updated_at,
+      };
+
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      console.log('Message sent to webhook successfully');
+    } catch (error) {
+      console.error('Error sending to webhook:', error);
+      // No lanzamos el error para que no afecte el flujo principal
     }
   }
 

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Phone, MoreVertical, Send, Paperclip, Smile } from 'lucide-react';
+import { Phone, MoreVertical, Send, Paperclip, Smile, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,6 +7,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Database } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';
 import { AssignToKanban } from './AssignToKanban';
+import EmojiPicker from 'emoji-picker-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 type Conversation = Database['public']['Tables']['conversations']['Row'];
 type Message = Database['public']['Tables']['messages']['Row'];
@@ -14,7 +17,7 @@ type Message = Database['public']['Tables']['messages']['Row'];
 interface ChatAreaProps {
   conversation: Conversation | null;
   messages: Message[];
-  onSendMessage: (message: string) => void;
+  onSendMessage: (message: string, attachment?: File) => void;
   isSending: boolean;
 }
 
@@ -25,8 +28,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   isSending,
 }) => {
   const [newMessage, setNewMessage] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   // Auto-scroll al final cuando llegan nuevos mensajes
   useEffect(() => {
@@ -36,11 +44,62 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   }, [messages]);
 
   // Manejar envío de mensaje
-  const handleSendMessage = () => {
-    if (!newMessage.trim() || !conversation || isSending) return;
+  const handleSendMessage = async () => {
+    if ((!newMessage.trim() && !selectedFile) || !conversation || isSending || isUploading) return;
 
-    onSendMessage(newMessage.trim());
-    setNewMessage('');
+    try {
+      setIsUploading(true);
+      let attachment: File | undefined = undefined;
+
+      if (selectedFile) {
+        attachment = selectedFile;
+      }
+
+      await onSendMessage(newMessage.trim(), attachment);
+      setNewMessage('');
+      setSelectedFile(null);
+      setShowEmojiPicker(false);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo enviar el mensaje',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Manejar selección de archivo
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validar tamaño (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: 'Archivo muy grande',
+          description: 'El archivo debe ser menor a 10MB',
+          variant: 'destructive',
+        });
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  // Manejar selección de emoji
+  const handleEmojiSelect = (emoji: any) => {
+    setNewMessage(prev => prev + emoji.emoji);
+    setShowEmojiPicker(false);
+  };
+
+  // Remover archivo seleccionado
+  const removeSelectedFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   // Formatear tiempo
@@ -178,8 +237,41 @@ const ChatArea: React.FC<ChatAreaProps> = ({
 
       {/* Input de mensaje */}
       <div className="p-4 border-t border-border">
+        {/* Preview de archivo seleccionado */}
+        {selectedFile && (
+          <div className="mb-3 p-3 bg-muted rounded-lg flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Paperclip className="h-4 w-4" />
+              <span className="text-sm">{selectedFile.name}</span>
+              <span className="text-xs text-muted-foreground">
+                ({Math.round(selectedFile.size / 1024)} KB)
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={removeSelectedFile}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+            className="hidden"
+          />
+          
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+          >
             <Paperclip className="h-4 w-4" />
           </Button>
           
@@ -195,20 +287,32 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                 }
               }}
               className="pr-10"
-              disabled={isSending}
+              disabled={isSending || isUploading}
             />
             <Button
               variant="ghost"
               size="sm"
               className="absolute right-1 top-1/2 transform -translate-y-1/2"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             >
               <Smile className="h-4 w-4" />
             </Button>
+            
+            {/* Selector de emojis */}
+            {showEmojiPicker && (
+              <div className="absolute bottom-full right-0 mb-2 z-50">
+                <EmojiPicker
+                  onEmojiClick={handleEmojiSelect}
+                  width={300}
+                  height={400}
+                />
+              </div>
+            )}
           </div>
           
           <Button
             onClick={handleSendMessage}
-            disabled={!newMessage.trim() || isSending}
+            disabled={(!newMessage.trim() && !selectedFile) || isSending || isUploading}
             size="sm"
           >
             <Send className="h-4 w-4" />
@@ -256,6 +360,45 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
       >
         {/* Contenido del mensaje */}
+        {message.attachment_url && (
+          <div className="mb-2">
+            {message.message_type === 'file' && (
+              <>
+                {message.attachment_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                  <img 
+                    src={message.attachment_url} 
+                    alt="Imagen adjunta"
+                    className="max-w-xs rounded-md cursor-pointer"
+                    onClick={() => window.open(message.attachment_url, '_blank')}
+                  />
+                ) : message.attachment_url.match(/\.(mp4|webm|ogg)$/i) ? (
+                  <video 
+                    src={message.attachment_url} 
+                    controls 
+                    className="max-w-xs rounded-md"
+                  />
+                ) : message.attachment_url.match(/\.(mp3|wav|ogg)$/i) ? (
+                  <audio 
+                    src={message.attachment_url} 
+                    controls 
+                    className="w-64"
+                  />
+                ) : (
+                  <a 
+                    href={message.attachment_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 p-2 bg-background/10 rounded-md hover:bg-background/20 transition-colors"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                    <span className="text-sm">Archivo adjunto</span>
+                  </a>
+                )}
+              </>
+            )}
+          </div>
+        )}
+        
         <div className="whitespace-pre-wrap break-words">
           {message.message}
         </div>

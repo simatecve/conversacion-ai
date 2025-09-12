@@ -5,6 +5,7 @@ import { useConversations, useMessages, useSearchConversations } from '@/hooks/u
 import { useAuth } from '@/hooks/useAuth';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 import { Database } from '@/integrations/supabase/types';
+import { supabase } from '@/integrations/supabase/client';
 
 type Conversation = Database['public']['Tables']['conversations']['Row'];
 type Message = Database['public']['Tables']['messages']['Row'];
@@ -33,18 +34,49 @@ const Conversations = () => {
   };
 
   // Manejar envío de mensaje
-  const handleSendMessage = (messageText: string) => {
-    if (!messageText.trim() || !selectedConversation || !effectiveUserId) return;
+  const handleSendMessage = async (messageText: string, attachment?: File) => {
+    if ((!messageText.trim() && !attachment) || !selectedConversation || !effectiveUserId) return;
+
+    let attachmentUrl = null;
+    
+    // Subir archivo si existe
+    if (attachment) {
+      try {
+        const fileExt = attachment.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${effectiveUserId}/${fileName}`;
+
+        const { data, error } = await supabase.storage
+          .from('message-attachments')
+          .upload(filePath, attachment);
+
+        if (error) {
+          console.error('Error uploading file:', error);
+          return;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('message-attachments')
+          .getPublicUrl(filePath);
+
+        attachmentUrl = publicUrl;
+      } catch (error) {
+        console.error('Error uploading attachment:', error);
+        return;
+      }
+    }
 
     sendMessage({
       conversation_id: selectedConversation.id,
-      message: messageText.trim(),
+      message: messageText.trim() || '',
       direction: 'outgoing',
       whatsapp_number: selectedConversation.whatsapp_number,
       instance_name: selectedConversation.instance_name || '',
       user_id: effectiveUserId,
-      message_type: 'text',
+      message_type: attachment ? 'file' : 'text',
       is_bot: false,
+      attachment_url: attachmentUrl,
+      file_url: attachmentUrl,
     });
   };
 
