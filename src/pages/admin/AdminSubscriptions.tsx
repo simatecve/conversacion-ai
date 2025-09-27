@@ -33,7 +33,7 @@ interface SubscriptionFormData {
 const AdminSubscriptions = () => {
   const [users, setUsers] = useState<Profile[]>([]);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [subscriptions, setSubscriptions] = useState<(AdminSubscription & { profiles: Profile | null; subscription_plans: SubscriptionPlan | null })[]>([]);
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);

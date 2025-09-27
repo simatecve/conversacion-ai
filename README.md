@@ -119,6 +119,13 @@ La aplicación incluye un sistema completo de gestión de conversaciones estilo 
 
 ## Cambios Recientes
 
+### v1.4.4 - Sistema de Conversaciones Mejorado (26 septiembre 2025)
+
+- ✅ **Chat optimizado**: Envío de mensajes exclusivamente por webhook sin guardar en BD
+- ✅ **Integración webhook**: URL actualizada a `https://n8n.kanbanpro.com.ar/webhook/enviar-mensaje`
+- ✅ **Arquitectura simplificada**: Separación clara entre mensajes de chat y almacenamiento
+- ✅ **Rendimiento mejorado**: Reducción de operaciones de base de datos innecesarias
+
 ### v1.4.2 - Actualización de Métodos de Pago
 
 - Eliminadas las restricciones de formato para claves de API de Mercado Pago
