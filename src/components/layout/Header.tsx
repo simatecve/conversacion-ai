@@ -1,8 +1,6 @@
 import React from 'react';
-import { Bell, Search, Sun, Moon, Plus, LogOut } from 'lucide-react';
+import { Bell, Sun, Moon, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,27 +19,8 @@ export const Header = () => {
   return (
     <header className="h-16 bg-card/50 backdrop-blur-sm border-b border-border sticky top-0 z-30">
       <div className="flex items-center justify-between h-full px-6">
-        {/* Left section - Search */}
-        <div className="flex items-center space-x-4 flex-1 max-w-md">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar leads, conversaciones o contactos..."
-              className="pl-10 bg-background/50 border-border/50 focus:bg-background transition-colors"
-            />
-          </div>
-        </div>
-
         {/* Right section - Actions */}
-        <div className="flex items-center space-x-3">
-          {/* Quick action button */}
-          <Button 
-            size="sm" 
-            className="bg-gradient-primary hover:opacity-90 transition-all duration-200 shadow-glow"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nuevo Lead
-          </Button>
+        <div className="flex items-center space-x-3 ml-auto">
 
           {/* Notifications */}
           <Button variant="ghost" size="sm" className="relative">
