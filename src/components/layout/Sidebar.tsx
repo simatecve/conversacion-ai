@@ -17,7 +17,6 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useConversations } from '@/hooks/useConversations';
 import logo2 from '@/assets/logo2.png';
-import packageJson from '../../../package.json';
 
 interface SidebarItem {
   label: string;
@@ -203,7 +202,7 @@ export const Sidebar = () => {
             </div>
             {!isCollapsed && (
               <div className="text-xs text-muted-foreground text-center mt-3">
-                Versión {packageJson.version}
+                Versión 1.4.4 (26 septiembre 2025)
               </div>
             )}
           </div>
