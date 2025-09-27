@@ -184,11 +184,11 @@ export const Dashboard = () => {
                 <div key={conv.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer">
                   <div className="flex items-center space-x-3 flex-1">
                     <div className="w-10 h-10 bg-gradient-success rounded-full flex items-center justify-center text-white font-medium">
-                      {(conv.pushname || conv.whatsapp_number).charAt(0).toUpperCase()}
+                      {(conv.pushname || conv.whatsapp_number || '?').charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-foreground truncate">{conv.pushname || conv.whatsapp_number}</h4>
+                        <h4 className="font-medium text-foreground truncate">{conv.pushname || conv.whatsapp_number || 'Contacto desconocido'}</h4>
                         <span className="text-xs text-muted-foreground">
                           {conv.last_message_at ? formatTimeAgo(conv.last_message_at) : 'Sin fecha'}
                         </span>
