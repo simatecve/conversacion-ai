@@ -7,36 +7,75 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
-  Zap
+  Zap,
+  Phone,
+  Send
 } from 'lucide-react';
 import { StatsCard } from './StatsCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useDashboard } from '@/hooks/useDashboard';
+import { Skeleton } from '@/components/ui/skeleton';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export const Dashboard = () => {
-  const recentLeads = [
-    { id: 1, name: 'María González', company: 'Tech Solutions', status: 'Nuevo', time: '5 min', phone: '+54 9 11 1234-5678' },
-    { id: 2, name: 'Carlos Rodríguez', company: 'Marketing Digital', status: 'Contactado', time: '15 min', phone: '+54 9 11 8765-4321' },
-    { id: 3, name: 'Ana Martínez', company: 'Consultoría', status: 'Calificado', time: '30 min', phone: '+54 9 11 5555-1234' },
-    { id: 4, name: 'Luis García', company: 'Desarrollo Web', status: 'Propuesta', time: '1h', phone: '+54 9 11 9999-8888' },
-  ];
-
-  const activeConversations = [
-    { id: 1, contact: 'Pedro Silva', message: 'Hola, necesito información sobre...', time: '2 min', unread: 3 },
-    { id: 2, contact: 'Laura Jiménez', message: '¿Cuándo podríamos agendar una...', time: '8 min', unread: 1 },
-    { id: 3, contact: 'Roberto Torres', message: 'Perfecto, quedamos entonces...', time: '12 min', unread: 0 },
-  ];
+  const { stats, recentLeads, activeConversations, isLoading } = useDashboard();
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Nuevo': return 'bg-blue-500 hover:bg-blue-600';
-      case 'Contactado': return 'bg-yellow-500 hover:bg-yellow-600';
-      case 'Calificado': return 'bg-green-500 hover:bg-green-600';
-      case 'Propuesta': return 'bg-purple-500 hover:bg-purple-600';
-      default: return 'bg-gray-500 hover:bg-gray-600';
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('nuevo')) return 'bg-blue-500 hover:bg-blue-600';
+    if (statusLower.includes('contactado') || statusLower.includes('en proceso')) return 'bg-yellow-500 hover:bg-yellow-600';
+    if (statusLower.includes('calificado') || statusLower.includes('interesado')) return 'bg-green-500 hover:bg-green-600';
+    if (statusLower.includes('propuesta') || statusLower.includes('negociacion')) return 'bg-purple-500 hover:bg-purple-600';
+    if (statusLower.includes('ganado') || statusLower.includes('cerrado')) return 'bg-emerald-500 hover:bg-emerald-600';
+    return 'bg-gray-500 hover:bg-gray-600';
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { 
+        addSuffix: true, 
+        locale: es 
+      });
+    } catch {
+      return 'hace poco';
     }
   };
+
+  const formatPhoneNumber = (phone: string | null) => {
+    if (!phone) return 'Sin teléfono';
+    // Formatear número de teléfono si es necesario
+    return phone.startsWith('+') ? phone : `+${phone}`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Panel Principal</h1>
+            <p className="text-muted-foreground mt-2">
+              Cargando datos de tu actividad comercial...
+            </p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="h-32">
+              <CardContent className="p-6">
+                <Skeleton className="h-4 w-24 mb-4" />
+                <Skeleton className="h-8 w-16 mb-2" />
+                <Skeleton className="h-3 w-20" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -60,28 +99,28 @@ export const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           title="Leads Totales"
-          value="1,247"
-          change={{ value: 12.5, trend: 'up' }}
+          value={stats.totalLeads.toString()}
+          change={{ value: 0, trend: 'up' }}
           icon={Target}
           gradient
         />
         <StatsCard
           title="Conversaciones Activas"
-          value="89"
-          change={{ value: 8.3, trend: 'up' }}
+          value={stats.activeConversations.toString()}
+          change={{ value: 0, trend: 'up' }}
           icon={MessageSquare}
         />
         <StatsCard
           title="Tasa de Conversión"
-          value="24.6%"
-          change={{ value: 3.2, trend: 'up' }}
+          value={`${stats.conversionRate}%`}
+          change={{ value: 0, trend: 'up' }}
           icon={TrendingUp}
         />
         <StatsCard
-          title="Mensajes Enviados"
-          value="3,421"
-          change={{ value: 5.8, trend: 'down' }}
-          icon={Zap}
+          title="Conexiones WhatsApp"
+          value={stats.whatsappConnections.toString()}
+          change={{ value: 0, trend: 'up' }}
+          icon={Phone}
         />
       </div>
 
@@ -101,21 +140,27 @@ export const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentLeads.map((lead) => (
+              {recentLeads.length > 0 ? recentLeads.map((lead) => (
                 <div key={lead.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-medium text-foreground">{lead.name}</h4>
-                      <span className="text-xs text-muted-foreground">{lead.time}</span>
+                      <span className="text-xs text-muted-foreground">{formatTimeAgo(lead.created_at)}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{lead.company}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{lead.phone}</p>
+                    <p className="text-sm text-muted-foreground">{lead.company || 'Sin empresa'}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{formatPhoneNumber(lead.phone)}</p>
                   </div>
-                  <Badge className={getStatusColor(lead.status)}>
-                    {lead.status}
+                  <Badge className={getStatusColor(lead.column_name)}>
+                    {lead.column_name}
                   </Badge>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center py-8">
+                  <Target className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">No hay leads recientes</p>
+                  <p className="text-xs text-muted-foreground mt-1">Los nuevos leads aparecerán aquí</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -135,27 +180,37 @@ export const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {activeConversations.map((conv) => (
+              {activeConversations.length > 0 ? activeConversations.map((conv) => (
                 <div key={conv.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer">
                   <div className="flex items-center space-x-3 flex-1">
                     <div className="w-10 h-10 bg-gradient-success rounded-full flex items-center justify-center text-white font-medium">
-                      {conv.contact.charAt(0)}
+                      {(conv.pushname || conv.whatsapp_number).charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-foreground truncate">{conv.contact}</h4>
-                        <span className="text-xs text-muted-foreground">{conv.time}</span>
+                        <h4 className="font-medium text-foreground truncate">{conv.pushname || conv.whatsapp_number}</h4>
+                        <span className="text-xs text-muted-foreground">
+                          {conv.last_message_at ? formatTimeAgo(conv.last_message_at) : 'Sin fecha'}
+                        </span>
                       </div>
-                      <p className="text-sm text-muted-foreground truncate">{conv.message}</p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {conv.last_message || 'Sin mensajes'}
+                      </p>
                     </div>
                   </div>
-                  {conv.unread > 0 && (
+                  {conv.unread_count > 0 && (
                     <Badge className="bg-destructive text-destructive-foreground ml-2">
-                      {conv.unread}
+                      {conv.unread_count}
                     </Badge>
                   )}
                 </div>
-              ))}
+              )) : (
+                <div className="text-center py-8">
+                  <MessageSquare className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">No hay conversaciones activas</p>
+                  <p className="text-xs text-muted-foreground mt-1">Las conversaciones aparecerán aquí</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -205,12 +260,26 @@ export const Dashboard = () => {
             <div className="space-y-4">
               <div className="bg-white/10 rounded-lg p-3">
                 <p className="text-sm text-white/90">
-                  <strong>Recomendación:</strong> Tienes 3 leads sin contactar desde hace más de 24 horas.
+                  <strong>Estado:</strong> {stats.totalLeads > 0 
+                    ? `Tienes ${stats.totalLeads} leads en tu sistema`
+                    : 'No tienes leads actualmente. ¡Comienza a agregar algunos!'
+                  }
                 </p>
               </div>
               <div className="bg-white/10 rounded-lg p-3">
                 <p className="text-sm text-white/90">
-                  <strong>Oportunidad:</strong> El mejor momento para enviar mensajes es entre 10-12h.
+                  <strong>Conexiones:</strong> {stats.whatsappConnections > 0 
+                    ? `${stats.whatsappConnections} conexión${stats.whatsappConnections > 1 ? 'es' : ''} WhatsApp activa${stats.whatsappConnections > 1 ? 's' : ''}`
+                    : 'Configura tu primera conexión WhatsApp'
+                  }
+                </p>
+              </div>
+              <div className="bg-white/10 rounded-lg p-3">
+                <p className="text-sm text-white/90">
+                  <strong>Conversión:</strong> {stats.conversionRate > 0 
+                    ? `Tasa actual del ${stats.conversionRate}%`
+                    : 'Sin datos de conversión aún'
+                  }
                 </p>
               </div>
               <Button variant="secondary" size="sm" className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30">
