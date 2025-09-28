@@ -18,6 +18,7 @@ import Settings from "./pages/Settings";
 import Leads from "./pages/Leads";
 import Conversations from "./pages/Conversations";
 import PaymentPlans from "./pages/PaymentPlans";
+import UsagePlan from "./pages/UsagePlan";
 import NotFound from "./pages/NotFound";
 // Admin pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -103,6 +104,11 @@ const App = () => (
             <Route path="/planes-pago" element={
               <ProtectedRoute>
                 <PaymentPlans />
+              </ProtectedRoute>
+            } />
+            <Route path="/uso-plan" element={
+              <ProtectedRoute>
+                <UsagePlan />
               </ProtectedRoute>
             } />
             {/* Admin Routes */}

@@ -10,6 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
+import { useUsageLimits } from '@/hooks/useUsageLimits';
+import UsageLimitAlert from '@/components/UsageLimitAlert';
+import AppLayout from '@/components/layout/AppLayout';
 
 
 interface WhatsAppConnection {
@@ -49,6 +52,7 @@ const WhatsAppConnections = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const { effectiveUserId, loading: userIdLoading } = useEffectiveUserId();
+  const { enforceLimit, incrementUsage } = useUsageLimits();
 
   useEffect(() => {
     // Solo ejecutar fetchConnections cuando tenemos un effectiveUserId válido
@@ -245,6 +249,12 @@ const WhatsAppConnections = () => {
       return;
     }
 
+    // Verificar límites antes de crear la conexión
+    const canCreate = await enforceLimit('whatsapp_connections', 1);
+    if (!canCreate) {
+      return;
+    }
+
     setCreating(true);
     try {
       // Primero obtener los datos completos del perfil del usuario
@@ -313,6 +323,9 @@ const WhatsAppConnections = () => {
         .single();
 
       if (error) throw error;
+
+      // Incrementar uso después de crear exitosamente
+      await incrementUsage('whatsapp_connections', 1);
 
       toast({
         title: "Conexión creada",
@@ -645,6 +658,9 @@ const WhatsAppConnections = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Alerta de límites */}
+      <UsageLimitAlert resourceType="whatsapp_connections_used" />
+
       {connections.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>
@@ -778,6 +794,7 @@ const WhatsAppConnections = () => {
         </Button>
       </div>
       </div>
+    </AppLayout>
   );
 };
 

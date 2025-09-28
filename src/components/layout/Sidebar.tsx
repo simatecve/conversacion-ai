@@ -70,7 +70,7 @@ export const Sidebar = () => {
     {
       label: 'Análisis',
       items: [
-        { label: 'Reportes', icon: BarChart3, href: '/reportes' },
+        { label: 'Uso del Plan', icon: BarChart3, href: '/uso-plan' },
       ]
     },
     {
