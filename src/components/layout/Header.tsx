@@ -3,21 +3,22 @@ import { Bell, Sun, Moon, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-
 export const Header = () => {
-  const { signOut, user } = useAuth();
-  const { toast } = useToast();
-
+  const {
+    signOut,
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const handleSignOut = async () => {
     await signOut();
     toast({
       title: "Sesión cerrada",
-      description: "Has cerrado sesión correctamente",
+      description: "Has cerrado sesión correctamente"
     });
   };
-
-  return (
-    <header className="h-16 bg-card/50 backdrop-blur-sm border-b border-border sticky top-0 z-30">
+  return <header className="h-16 bg-card/50 backdrop-blur-sm border-b border-border sticky top-0 z-30">
       <div className="flex items-center justify-between h-full px-6">
         {/* Right section - Actions */}
         <div className="flex items-center space-x-3 ml-auto">
@@ -31,10 +32,7 @@ export const Header = () => {
           </Button>
 
           {/* Theme toggle */}
-          <Button variant="ghost" size="sm">
-            <Sun className="h-5 w-5 dark:hidden" />
-            <Moon className="h-5 w-5 hidden dark:block" />
-          </Button>
+          
 
           {/* Logout */}
           <Button variant="ghost" size="sm" onClick={handleSignOut}>
@@ -53,6 +51,5 @@ export const Header = () => {
           </div>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
