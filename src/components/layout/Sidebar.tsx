@@ -11,7 +11,8 @@ import {
   X,
   Bot,
   Phone,
-  Calendar
+  Calendar,
+  CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -75,6 +76,7 @@ export const Sidebar = () => {
     {
       label: 'Sistema',
       items: [
+        { label: 'Planes de Pago', icon: CreditCard, href: '/planes-pago' },
         { label: 'Configuración', icon: Settings, href: '/configuracion' },
       ]
     }

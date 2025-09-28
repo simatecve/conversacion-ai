@@ -17,6 +17,7 @@ import CreateCampaign from "./pages/CreateCampaign";
 import Settings from "./pages/Settings";
 import Leads from "./pages/Leads";
 import Conversations from "./pages/Conversations";
+import PaymentPlans from "./pages/PaymentPlans";
 import NotFound from "./pages/NotFound";
 // Admin pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -97,6 +98,11 @@ const App = () => (
             <Route path="/conversaciones" element={
               <ProtectedRoute>
                 <Conversations />
+              </ProtectedRoute>
+            } />
+            <Route path="/planes-pago" element={
+              <ProtectedRoute>
+                <PaymentPlans />
               </ProtectedRoute>
             } />
             {/* Admin Routes */}
