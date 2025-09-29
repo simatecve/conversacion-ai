@@ -793,8 +793,7 @@ const WhatsAppConnections = () => {
           Conexiones Existentes
         </Button>
       </div>
-      </div>
-    </AppLayout>
+    </div>
   );
 };
 
