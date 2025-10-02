@@ -44,9 +44,10 @@ export type Database = {
       admin_subscriptions: {
         Row: {
           amount: number
-          auto_renew: boolean
+          auto_renew: boolean | null
           billing_cycle: string
           created_at: string
+          created_by: string | null
           currency: string
           end_date: string | null
           id: string
@@ -57,30 +58,34 @@ export type Database = {
           status: string
           trial_end_date: string | null
           updated_at: string
+          updated_by: string | null
           user_id: string
         }
         Insert: {
           amount: number
-          auto_renew?: boolean
+          auto_renew?: boolean | null
           billing_cycle?: string
           created_at?: string
+          created_by?: string | null
           currency?: string
           end_date?: string | null
           id?: string
           notes?: string | null
           payment_method_id?: string | null
           plan_id: string
-          start_date: string
+          start_date?: string
           status?: string
           trial_end_date?: string | null
           updated_at?: string
+          updated_by?: string | null
           user_id: string
         }
         Update: {
           amount?: number
-          auto_renew?: boolean
+          auto_renew?: boolean | null
           billing_cycle?: string
           created_at?: string
+          created_by?: string | null
           currency?: string
           end_date?: string | null
           id?: string
@@ -91,9 +96,17 @@ export type Database = {
           status?: string
           trial_end_date?: string | null
           updated_at?: string
+          updated_by?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "admin_subscriptions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "admin_subscriptions_payment_method_id_fkey"
             columns: ["payment_method_id"]
@@ -106,6 +119,13 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_subscriptions_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -627,8 +647,10 @@ export type Database = {
           api_key: string | null
           configuration: Json | null
           created_at: string
+          description: string | null
           id: string
-          is_active: boolean
+          is_active: boolean | null
+          is_sandbox: boolean | null
           name: string
           provider: string
           secret_key: string | null
@@ -640,8 +662,10 @@ export type Database = {
           api_key?: string | null
           configuration?: Json | null
           created_at?: string
+          description?: string | null
           id?: string
-          is_active?: boolean
+          is_active?: boolean | null
+          is_sandbox?: boolean | null
           name: string
           provider: string
           secret_key?: string | null
@@ -653,8 +677,10 @@ export type Database = {
           api_key?: string | null
           configuration?: Json | null
           created_at?: string
+          description?: string | null
           id?: string
-          is_active?: boolean
+          is_active?: boolean | null
+          is_sandbox?: boolean | null
           name?: string
           provider?: string
           secret_key?: string | null
@@ -879,6 +905,13 @@ export type Database = {
             referencedRelation: "subscription_plans"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_usage: {
@@ -1023,6 +1056,10 @@ export type Database = {
       is_superadmin: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      update_expired_subscriptions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
