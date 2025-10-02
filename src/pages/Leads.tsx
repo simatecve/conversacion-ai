@@ -130,59 +130,20 @@ const Leads = () => {
   };
 
   const loadLeads = async () => {
-    // Debug: Consultar TODOS los leads sin filtros
-    const { data: allLeads } = await supabase
-      .from('leads')
-      .select('id, name, instancia, user_id');
-    console.log('=== TODOS LOS LEADS EN LA BASE DE DATOS ===');
-    console.log('Total leads:', allLeads?.length);
-    console.log('Leads:', allLeads);
-    
-    // Primero obtenemos las instancias del usuario logueado
-    const { data: userInstances, error: instancesError } = await supabase
-      .from('whatsapp_connections')
-      .select('name')
-      .eq('user_id', user?.id);
-
-    console.log('=== INSTANCIAS DEL USUARIO ===');
-    console.log('User ID:', user?.id);
-    console.log('User instances:', userInstances);
-
-    if (instancesError) {
-      console.error('Error loading user instances:', instancesError);
-      return;
-    }
-
-    const instanceNames = userInstances?.map(instance => instance.name) || [];
-    console.log('Instance names extracted:', instanceNames);
-
-    // Construir la consulta OR para filtrar por user_id o instancias del usuario
-    let orConditions = [`user_id.eq.${user?.id}`];
-    instanceNames.forEach(instanceName => {
-      orConditions.push(`instancia.eq.${instanceName}`);
-    });
-
-    console.log('=== CONDICIONES DE FILTRADO ===');
-    console.log('OR conditions:', orConditions);
-    console.log('Final query:', orConditions.join(','));
-
+    // Las políticas RLS se encargan del filtrado automáticamente
+    // Solo se mostrarán leads con user_id del usuario o instancias que le pertenecen
     const { data, error } = await supabase
       .from('leads')
       .select(`
         *,
         lead_columns(*)
       `)
-      .or(orConditions.join(','))
       .order('position');
 
     if (error) {
       console.error('Error loading leads:', error);
       return;
     }
-
-    console.log('=== LEADS FILTRADOS ===');
-    console.log('Filtered leads count:', data?.length);
-    console.log('Filtered leads:', data?.map(lead => ({ id: lead.id, name: lead.name, instancia: lead.instancia, user_id: lead.user_id })));
 
     setLeads(data || []);
   };
