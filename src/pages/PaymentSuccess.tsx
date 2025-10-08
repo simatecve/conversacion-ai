@@ -11,8 +11,15 @@ const PaymentSuccess = () => {
   const status = searchParams.get('status');
 
   useEffect(() => {
-    // Opcional: Puedes hacer alguna validación adicional aquí
-    console.log('Payment success - ID:', paymentId, 'Status:', status);
+    const updateSubscription = async () => {
+      if (status === 'approved' && paymentId) {
+        console.log('Payment approved - updating subscription');
+        // La suscripción ya debería estar actualizada por el webhook
+        // pero podemos verificar el estado aquí si es necesario
+      }
+    };
+    
+    updateSubscription();
   }, [paymentId, status]);
 
   return (

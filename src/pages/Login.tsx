@@ -115,7 +115,7 @@ const Login = () => {
           </form>
           <div className="text-center mt-6 pt-4 border-t border-border">
             <p className="text-xs text-muted-foreground">
-              Versión 1.4.9 (06 de octubre de 2025)
+              Versión 1.5.0 (08 de octubre de 2025)
             </p>
           </div>
         </CardContent>

@@ -82,23 +82,103 @@ const PaymentPlans = () => {
     try {
       setPurchasing(planId);
 
-      // Llamar al edge function para crear el pago con Mercado Pago
-      const { data, error } = await supabase.functions.invoke(
-        'create-mercadopago-payment',
-        {
-          body: { planId }
-        }
-      );
+      // Obtener el plan
+      const { data: plan, error: planError } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('id', planId)
+        .single();
 
-      if (error) throw error;
-
-      if (data.error) {
-        throw new Error(data.error);
+      if (planError || !plan) {
+        throw new Error('Plan no encontrado');
       }
 
+      // Obtener la configuración de Mercado Pago
+      const { data: paymentMethod, error: pmError } = await supabase
+        .from('payment_methods')
+        .select('api_key, name')
+        .eq('provider', 'mercadopago_argentina')
+        .eq('is_active', true)
+        .single();
+
+      if (pmError || !paymentMethod) {
+        throw new Error('Mercado Pago no está configurado. Contacta al administrador.');
+      }
+
+      // Obtener perfil del usuario
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      const publicKey = paymentMethod.api_key; // api_key es la clave pública
+      const currentUrl = window.location.origin;
+
+      // Crear la preferencia de pago
+      const preferenceData = {
+        items: [
+          {
+            title: `Plan ${plan.name}`,
+            description: plan.description || `Suscripción mensual al plan ${plan.name}`,
+            quantity: 1,
+            unit_price: Number(plan.price),
+            currency_id: 'ARS'
+          }
+        ],
+        payer: {
+          name: profile?.first_name || '',
+          surname: profile?.last_name || '',
+          email: user.email || '',
+        },
+        back_urls: {
+          success: `${currentUrl}/payment-success`,
+          failure: `${currentUrl}/payment-failure`,
+          pending: `${currentUrl}/payment-pending`
+        },
+        auto_return: 'approved',
+        metadata: {
+          user_id: user.id,
+          plan_id: planId,
+          plan_name: plan.name
+        },
+        external_reference: `${user.id}-${planId}-${Date.now()}`
+      };
+
+      // Crear la preferencia en Mercado Pago
+      const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${publicKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(preferenceData)
+      });
+
+      if (!mpResponse.ok) {
+        const errorText = await mpResponse.text();
+        console.error('Mercado Pago API error:', errorText);
+        throw new Error('Error al crear la preferencia de pago en Mercado Pago');
+      }
+
+      const preference = await mpResponse.json();
+
+      // Guardar la referencia del pago pendiente
+      await supabase
+        .from('user_subscriptions')
+        .upsert({
+          user_id: user.id,
+          plan_id: planId,
+          status: 'pending',
+          started_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id',
+          ignoreDuplicates: false
+        });
+
       // Redirigir al usuario al checkout de Mercado Pago
-      if (data.init_point) {
-        window.location.href = data.init_point;
+      if (preference.init_point) {
+        window.location.href = preference.init_point;
       } else {
         throw new Error('No se pudo obtener la URL de pago');
       }
