@@ -82,46 +82,33 @@ const PaymentPlans = () => {
     try {
       setPurchasing(planId);
 
-      // Si ya tiene una suscripción activa, actualizarla
-      if (currentSubscription) {
-        const { error } = await supabase
-          .from('user_subscriptions')
-          .update({
-            plan_id: planId,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', currentSubscription.id);
+      // Llamar al edge function para crear el pago con Mercado Pago
+      const { data, error } = await supabase.functions.invoke(
+        'create-mercadopago-payment',
+        {
+          body: { planId }
+        }
+      );
 
-        if (error) throw error;
-      } else {
-        // Crear nueva suscripción
-        const { error } = await supabase
-          .from('user_subscriptions')
-          .insert({
-            user_id: user.id,
-            plan_id: planId,
-            status: 'active',
-            started_at: new Date().toISOString()
-          });
+      if (error) throw error;
 
-        if (error) throw error;
+      if (data.error) {
+        throw new Error(data.error);
       }
 
-      toast({
-        title: "Plan activado",
-        description: "Tu nuevo plan ha sido activado exitosamente",
-      });
-
-      // Recargar datos
-      fetchPlansAndSubscription();
+      // Redirigir al usuario al checkout de Mercado Pago
+      if (data.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        throw new Error('No se pudo obtener la URL de pago');
+      }
     } catch (error: any) {
       console.error('Error purchasing plan:', error);
       toast({
         title: "Error",
-        description: error.message || "No se pudo activar el plan",
+        description: error.message || "No se pudo procesar el pago. Verifica que Mercado Pago esté configurado correctamente.",
         variant: "destructive",
       });
-    } finally {
       setPurchasing(null);
     }
   };

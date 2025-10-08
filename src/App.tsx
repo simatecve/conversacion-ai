@@ -18,6 +18,9 @@ import Settings from "./pages/Settings";
 import Leads from "./pages/Leads";
 import Conversations from "./pages/Conversations";
 import PaymentPlans from "./pages/PaymentPlans";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailure from "./pages/PaymentFailure";
+import PaymentPending from "./pages/PaymentPending";
 import UsagePlan from "./pages/UsagePlan";
 import NotFound from "./pages/NotFound";
 // Admin pages
@@ -104,6 +107,21 @@ const App = () => (
             <Route path="/planes-pago" element={
               <ProtectedRoute>
                 <PaymentPlans />
+              </ProtectedRoute>
+            } />
+            <Route path="/payment-success" element={
+              <ProtectedRoute>
+                <PaymentSuccess />
+              </ProtectedRoute>
+            } />
+            <Route path="/payment-failure" element={
+              <ProtectedRoute>
+                <PaymentFailure />
+              </ProtectedRoute>
+            } />
+            <Route path="/payment-pending" element={
+              <ProtectedRoute>
+                <PaymentPending />
               </ProtectedRoute>
             } />
             <Route path="/uso-plan" element={
