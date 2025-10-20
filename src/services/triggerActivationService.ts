@@ -130,13 +130,26 @@ export class TriggerActivationService {
       triggerId,
       leadId,
       messageContent,
-      messageTitle,
       scheduledFor,
       userId,
       leadPhone
     } = data;
 
     try {
+      // Obtener la instancia de WhatsApp activa del usuario
+      const { data: whatsappConnection, error: connectionError } = await supabase
+        .from('whatsapp_connections')
+        .select('name')
+        .eq('user_id', userId)
+        .eq('status', 'conectado')
+        .limit(1)
+        .single();
+
+      if (connectionError || !whatsappConnection) {
+        console.warn(`No active WhatsApp connection found for user ${userId}, skipping message scheduling`);
+        return;
+      }
+
       const { error } = await supabase
         .from('automated_message_logs')
         .insert({
@@ -145,13 +158,17 @@ export class TriggerActivationService {
           message_content: messageContent,
           user_id: userId,
           whatsapp_number: leadPhone,
-          status: 'scheduled',
-          sent_at: scheduledFor
+          instance_name: whatsappConnection.name,
+          scheduled_for: scheduledFor,
+          status: 'pending',
+          retry_count: 0,
         });
 
       if (error) {
         throw new Error(`Error al registrar mensaje programado: ${error.message}`);
       }
+
+      console.log(`✅ Mensaje programado para ${scheduledFor} via instancia ${whatsappConnection.name}`);
     } catch (error) {
       console.error('Error al registrar mensaje en logs:', error);
       throw error;

@@ -219,8 +219,11 @@ export type Database = {
           error_message: string | null
           id: string
           instance_name: string | null
+          last_retry_at: string | null
           lead_id: string
           message_content: string
+          retry_count: number
+          scheduled_for: string | null
           sent_at: string
           status: string
           trigger_id: string
@@ -231,8 +234,11 @@ export type Database = {
           error_message?: string | null
           id?: string
           instance_name?: string | null
+          last_retry_at?: string | null
           lead_id: string
           message_content: string
+          retry_count?: number
+          scheduled_for?: string | null
           sent_at?: string
           status?: string
           trigger_id: string
@@ -243,8 +249,11 @@ export type Database = {
           error_message?: string | null
           id?: string
           instance_name?: string | null
+          last_retry_at?: string | null
           lead_id?: string
           message_content?: string
+          retry_count?: number
+          scheduled_for?: string | null
           sent_at?: string
           status?: string
           trigger_id?: string
