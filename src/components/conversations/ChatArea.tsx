@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Phone, MoreVertical, Send, Paperclip, Smile, X } from 'lucide-react';
+import { Phone, MoreVertical, Send, Paperclip, Smile, X, BotOff, Bot } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,6 +11,8 @@ import EmojiPicker from 'emoji-picker-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AttachmentRenderer from './AttachmentRenderer';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useBotBlock } from '@/hooks/useBotBlock';
 
 type Conversation = Database['public']['Tables']['conversations']['Row'];
 type Message = Database['public']['Tables']['messages']['Row'];
@@ -36,6 +38,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { isBlocked, isLoading: isBotToggling, toggleBotBlock } = useBotBlock(
+    conversation?.whatsapp_number || null,
+    conversation?.pushname || null
+  );
 
   // Auto-scroll al final cuando llegan nuevos mensajes
   useEffect(() => {
@@ -193,9 +199,31 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             <Button variant="ghost" size="sm">
               <Phone className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem 
+                  onClick={toggleBotBlock}
+                  disabled={isBotToggling}
+                >
+                  {isBlocked ? (
+                    <>
+                      <Bot className="h-4 w-4 mr-2" />
+                      Activar Bot
+                    </>
+                  ) : (
+                    <>
+                      <BotOff className="h-4 w-4 mr-2" />
+                      Desactivar Bot
+                    </>
+                  )}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

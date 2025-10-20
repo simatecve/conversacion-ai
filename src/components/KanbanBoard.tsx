@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Plus, Edit, Trash2, MoreVertical, Building, Mail, Phone, DollarSign, Users, MessageSquare } from 'lucide-react';
+import { Plus, Edit, Trash2, MoreVertical, Building, Mail, Phone, DollarSign, Users, MessageSquare, BotOff, Bot } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { TriggerActivationService } from '@/services/triggerActivationService';
 import { useAuth } from '@/hooks/useAuth';
+import { useBotBlock } from '@/hooks/useBotBlock';
 
 type LeadColumn = Tables<'lead_columns'>;
 type Lead = Tables<'leads'>;
@@ -37,6 +38,11 @@ interface LeadCardProps {
 }
 
 const LeadCard: React.FC<LeadCardProps> = ({ lead, index, onEdit, onDelete }) => {
+  const { isBlocked, isLoading: isBotToggling, toggleBotBlock } = useBotBlock(
+    lead.phone || null,
+    lead.name || null
+  );
+
   return (
     <Draggable draggableId={lead.id} index={index}>
       {(provided, snapshot) => (
@@ -52,7 +58,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, index, onEdit, onDelete }) =>
                 <div className="font-medium text-sm truncate flex-1">
                   {lead.name}
                 </div>
-                {(onEdit || onDelete) && (
+                {(onEdit || onDelete || lead.phone) && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
@@ -60,6 +66,24 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, index, onEdit, onDelete }) =>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
+                      {lead.phone && (
+                        <DropdownMenuItem 
+                          onClick={toggleBotBlock}
+                          disabled={isBotToggling}
+                        >
+                          {isBlocked ? (
+                            <>
+                              <Bot className="h-3 w-3 mr-2" />
+                              Activar Bot
+                            </>
+                          ) : (
+                            <>
+                              <BotOff className="h-3 w-3 mr-2" />
+                              Desactivar Bot
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                      )}
                       {onEdit && (
                         <DropdownMenuItem onClick={() => onEdit(lead)}>
                           <Edit className="h-3 w-3 mr-2" />

@@ -363,6 +363,33 @@ export type Database = {
         }
         Relationships: []
       }
+      contacto_bloqueado_bot: {
+        Row: {
+          created_at: string
+          id: string
+          numero: string
+          pushname: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          numero: string
+          pushname?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          numero?: string
+          pushname?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           created_at: string
