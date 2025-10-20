@@ -69,14 +69,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       await onSendMessage(newMessage.trim(), attachment);
       
       // Si auto-stop está activado y el bot no está bloqueado, bloquear automáticamente
-      if (autoStopEnabled && !isBlocked && user) {
-        await supabase
-          .from('contacto_bloqueado_bot')
-          .insert({
-            user_id: user.id,
-            numero: conversation.whatsapp_number,
-            pushname: conversation.pushname,
-          });
+      if (autoStopEnabled && !isBlocked) {
+        await toggleBotBlock();
       }
       
       setNewMessage('');
