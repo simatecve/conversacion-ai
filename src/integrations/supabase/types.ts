@@ -893,6 +893,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_bot_settings: {
+        Row: {
+          auto_stop_on_human_reply: boolean
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_stop_on_human_reply?: boolean
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_stop_on_human_reply?: boolean
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_subscriptions: {
         Row: {
           created_at: string

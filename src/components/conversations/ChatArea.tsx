@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import AttachmentRenderer from './AttachmentRenderer';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useBotBlock } from '@/hooks/useBotBlock';
+import { useBotAutoStop } from '@/hooks/useBotAutoStop';
+import { useAuth } from '@/hooks/useAuth';
 
 type Conversation = Database['public']['Tables']['conversations']['Row'];
 type Message = Database['public']['Tables']['messages']['Row'];
@@ -38,10 +40,12 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
   const { isBlocked, isLoading: isBotToggling, toggleBotBlock } = useBotBlock(
     conversation?.whatsapp_number || null,
     conversation?.pushname || null
   );
+  const { autoStopEnabled } = useBotAutoStop();
 
   // Auto-scroll al final cuando llegan nuevos mensajes
   useEffect(() => {
@@ -63,6 +67,18 @@ const ChatArea: React.FC<ChatAreaProps> = ({
       }
 
       await onSendMessage(newMessage.trim(), attachment);
+      
+      // Si auto-stop está activado y el bot no está bloqueado, bloquear automáticamente
+      if (autoStopEnabled && !isBlocked && user) {
+        await supabase
+          .from('contacto_bloqueado_bot')
+          .insert({
+            user_id: user.id,
+            numero: conversation.whatsapp_number,
+            pushname: conversation.pushname,
+          });
+      }
+      
       setNewMessage('');
       setSelectedFile(null);
       setShowEmojiPicker(false);

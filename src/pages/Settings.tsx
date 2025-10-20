@@ -11,7 +11,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
 import Integrations from '@/components/Integrations';
-import { User, Lock, Phone, Building, Mail, Save, Eye, EyeOff, Settings as SettingsIcon, Key } from 'lucide-react';
+import { User, Lock, Phone, Building, Mail, Save, Eye, EyeOff, Settings as SettingsIcon, Key, Bot } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { useBotAutoStop } from '@/hooks/useBotAutoStop';
 
 interface UserProfile {
   first_name: string | null;
@@ -43,6 +45,7 @@ const Settings = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const { effectiveUserId } = useEffectiveUserId();
+  const { autoStopEnabled, isLoading: isBotLoading, toggleAutoStop } = useBotAutoStop();
 
   useEffect(() => {
     fetchProfile();
@@ -182,10 +185,14 @@ const Settings = () => {
       </div>
       
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile" className="flex items-center space-x-2">
               <User className="h-4 w-4" />
               <span>Perfil</span>
+            </TabsTrigger>
+            <TabsTrigger value="bot" className="flex items-center space-x-2">
+              <Bot className="h-4 w-4" />
+              <span>Bot</span>
             </TabsTrigger>
             <TabsTrigger value="integrations" className="flex items-center space-x-2">
               <Key className="h-4 w-4" />
@@ -385,6 +392,47 @@ const Settings = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="bot" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Bot className="h-5 w-5" />
+                  <span>Configuración del Bot</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1 flex-1">
+                    <Label htmlFor="auto-stop" className="text-base font-medium">
+                      Auto-detención al responder
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Cuando está activo, el bot se detendrá automáticamente para un contacto cuando tú respondas manualmente en la conversación. 
+                      Si está inactivo, el bot seguirá respondiendo aunque escribas.
+                    </p>
+                  </div>
+                  <Switch
+                    id="auto-stop"
+                    checked={autoStopEnabled}
+                    onCheckedChange={toggleAutoStop}
+                    disabled={isBotLoading}
+                  />
+                </div>
+                
+                <Separator />
+                
+                <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                  <p className="text-sm font-medium">¿Cómo funciona?</p>
+                  <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                    <li>Si está <strong>activado</strong>: Cuando un contacto escribe y tú respondes desde el chat, el bot se desactiva automáticamente para ese contacto.</li>
+                    <li>Si está <strong>desactivado</strong>: El bot seguirá respondiendo incluso si intervienes en la conversación.</li>
+                    <li>Esto afecta a todas las conversaciones y también se combina con la configuración individual de cada contacto.</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
           
           <TabsContent value="integrations" className="mt-6">
