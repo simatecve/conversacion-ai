@@ -13,6 +13,7 @@ import { Plus, Bot, Trash2, Edit, MessageSquare, Clock, Settings } from 'lucide-
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import AppLayout from '@/components/layout/AppLayout';
 
 import { Tables } from '@/integrations/supabase/types';
 
@@ -325,17 +326,20 @@ const AIAgents = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <AppLayout>
+        <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <Bot className="h-12 w-12 mx-auto mb-4 text-muted-foreground animate-pulse" />
             <p className="text-muted-foreground">Cargando agentes de IA...</p>
           </div>
         </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <AppLayout>
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -570,6 +574,7 @@ const AIAgents = () => {
           </div>
         )}
       </div>
+    </AppLayout>
   );
 };
 

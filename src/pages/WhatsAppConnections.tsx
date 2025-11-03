@@ -491,35 +491,38 @@ const WhatsAppConnections = () => {
 
   if (loading || userIdLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Conexiones WhatsApp</h1>
+      <AppLayout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">Conexiones WhatsApp</h1>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-6">
+                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-muted rounded w-1/2"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Conexiones WhatsApp</h1>
-          <p className="text-muted-foreground">Gestiona tus conexiones de WhatsApp</p>
-        </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-primary hover:opacity-90 transition-all duration-200 shadow-glow">
-              <Plus className="h-4 w-4 mr-2" />
+    <AppLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Conexiones WhatsApp</h1>
+            <p className="text-muted-foreground">Gestiona tus conexiones de WhatsApp</p>
+          </div>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-primary hover:opacity-90 transition-all duration-200 shadow-glow">
+                <Plus className="h-4 w-4 mr-2" />
               Nueva Conexión
             </Button>
           </DialogTrigger>
@@ -793,7 +796,8 @@ const WhatsAppConnections = () => {
           Conexiones Existentes
         </Button>
       </div>
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 
