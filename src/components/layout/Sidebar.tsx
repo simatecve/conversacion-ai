@@ -11,7 +11,6 @@ import {
   X,
   Bot,
   Phone,
-  Calendar,
   CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -64,7 +63,6 @@ export const Sidebar = () => {
         { label: 'Leads', icon: UserPlus, href: '/leads' },
         { label: 'Listas de Contactos', icon: Users, href: '/listas-contactos' },
         { label: 'Asistente IA', icon: Bot, href: '/asistente-ia' },
-        { label: 'Calendario', icon: Calendar, href: '/calendario' },
       ]
     },
     {
