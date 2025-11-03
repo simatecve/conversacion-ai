@@ -175,7 +175,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               </div>
             </div>
             <div className="text-xs text-muted-foreground text-center mt-3 mb-3">
-              Versión 1.4.5 (28 septiembre 2025)
+              Versión 1.6.0 (3 noviembre 2025)
             </div>
             <Button
               variant="outline"
