@@ -27,7 +27,7 @@ serve(async (req) => {
       const { data: paymentMethod, error: pmError } = await supabase
         .from('payment_methods')
         .select('*')
-        .eq('provider', 'mercadopago_argentina')
+        .eq('provider', 'mercadopago')
         .eq('is_active', true)
         .single();
 

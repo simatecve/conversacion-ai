@@ -96,8 +96,8 @@ const PaymentPlans = () => {
       // Obtener la configuración de Mercado Pago
       const { data: paymentMethod, error: pmError } = await supabase
         .from('payment_methods')
-        .select('api_key, name')
-        .eq('provider', 'mercadopago_argentina')
+        .select('secret_key, name')
+        .eq('provider', 'mercadopago')
         .eq('is_active', true)
         .single();
 
@@ -112,7 +112,7 @@ const PaymentPlans = () => {
         .eq('id', user.id)
         .single();
 
-      const publicKey = paymentMethod.api_key; // api_key es la clave pública
+      const accessToken = paymentMethod.secret_key; // secret_key es el Access Token
       const currentUrl = window.location.origin;
 
       // Crear la preferencia de pago
@@ -149,7 +149,7 @@ const PaymentPlans = () => {
       const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${publicKey}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(preferenceData)
