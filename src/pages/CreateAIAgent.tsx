@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -142,17 +143,20 @@ const CreateAIAgent = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <AppLayout>
+        <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <Bot className="h-12 w-12 mx-auto mb-4 text-muted-foreground animate-pulse" />
             <p className="text-muted-foreground">Cargando...</p>
           </div>
         </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <AppLayout>
+      <div className="space-y-6">
         <div className="flex items-center space-x-3 mb-6">
           <Button variant="ghost" size="sm" onClick={handleCancel}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -288,6 +292,7 @@ const CreateAIAgent = () => {
         </Card>
         </div>
       </div>
+    </AppLayout>
   );
 };
 

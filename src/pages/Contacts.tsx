@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import AppLayout from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 import { Button } from '@/components/ui/button';
@@ -359,17 +360,20 @@ const Contacts = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Cargando contactos...</p>
           </div>
         </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <AppLayout>
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center mb-6">
           <Button
@@ -656,6 +660,7 @@ const Contacts = () => {
         </DialogContent>
       </Dialog>
       </div>
+    </AppLayout>
   );
 };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AppLayout from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -222,17 +223,20 @@ const ContactLists = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Cargando listas de contactos...</p>
           </div>
         </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <AppLayout>
+      <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Listas de Contactos</h1>
@@ -407,6 +411,7 @@ const ContactLists = () => {
         </DialogContent>
       </Dialog>
       </div>
+    </AppLayout>
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AppLayout from '@/components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -522,7 +523,8 @@ const Leads = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <AppLayout>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
@@ -754,7 +756,8 @@ const Leads = () => {
           onClose={closeMessageTriggersDialog}
           column={selectedColumnForTriggers}
         />
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 
