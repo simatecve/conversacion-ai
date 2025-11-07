@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import AppLayout from '@/components/layout/AppLayout';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -523,7 +523,7 @@ const Leads = () => {
   }
 
   return (
-    <AppLayout>
+    
       <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -757,7 +757,7 @@ const Leads = () => {
           column={selectedColumnForTriggers}
         />
       </div>
-    </AppLayout>
+    
   );
 };
 

@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 import { useUsageLimits } from '@/hooks/useUsageLimits';
 import UsageLimitAlert from '@/components/UsageLimitAlert';
-import AppLayout from '@/components/layout/AppLayout';
+
 
 
 interface WhatsAppConnection {
@@ -491,7 +491,6 @@ const WhatsAppConnections = () => {
 
   if (loading || userIdLoading) {
     return (
-      <AppLayout>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Conexiones WhatsApp</h1>
@@ -507,12 +506,11 @@ const WhatsAppConnections = () => {
             ))}
           </div>
         </div>
-      </AppLayout>
     );
   }
 
   return (
-    <AppLayout>
+    
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -797,7 +795,7 @@ const WhatsAppConnections = () => {
         </Button>
       </div>
       </div>
-    </AppLayout>
+    
   );
 };
 

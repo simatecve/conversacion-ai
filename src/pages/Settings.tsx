@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import AppLayout from '@/components/layout/AppLayout';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -169,19 +169,17 @@ const Settings = () => {
 
   if (loading) {
     return (
-      <AppLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Cargando configuración...</p>
           </div>
         </div>
-      </AppLayout>
     );
   }
 
   return (
-    <AppLayout>
+    
       <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center space-x-2">
         <SettingsIcon className="h-6 w-6 text-primary" />
@@ -444,7 +442,7 @@ const Settings = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </AppLayout>
+    
   );
 };
 
